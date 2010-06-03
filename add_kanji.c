@@ -26,6 +26,8 @@ static int create_dialog (void)
 		Widgets w;
 
 		w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
+
+		gtk_container_set_border_width (GTK_CONTAINER (w.dialog), 10);
 		
 		lbl = gtk_label_new ("Required fields:");
 
@@ -62,11 +64,11 @@ static int create_dialog (void)
 
 		table2 = gtk_table_new (2, 2, FALSE);
 
-		gtk_table_attach_defaults (GTK_TABLE (table2), w.jlpt_label, 0, 1, 1, 2);
-		gtk_table_attach_defaults (GTK_TABLE (table2), w.grade_label, 0, 1, 2, 3);
+		gtk_table_attach (GTK_TABLE (table2), w.jlpt_label, 0, 1, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table2), w.grade_label, 0, 1, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
-		gtk_table_attach_defaults (GTK_TABLE (table2), w.jlpt_spin, 1, 2, 1, 2);
-		gtk_table_attach_defaults (GTK_TABLE (table2), w.grade_spin, 1, 2, 2, 3);
+		gtk_table_attach (GTK_TABLE (table2), w.jlpt_spin, 1, 2, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table2), w.grade_spin, 1, 2, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		
 		expander = gtk_expander_new ("Optional fields");
 		gtk_container_add (GTK_CONTAINER (expander), table2);
@@ -76,23 +78,23 @@ static int create_dialog (void)
 
 		table1 = gtk_table_new (8, 2, FALSE);
 
-		gtk_table_attach_defaults (GTK_TABLE (table1), lbl, 0, 1, 0, 1);
+		gtk_table_attach (GTK_TABLE (table1), lbl, 0, 1, 0, 1, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.kanji_label, 0, 1, 1, 2);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.key_label, 0, 1, 2, 3);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.stroke_label, 0, 1, 3, 4);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.on_label, 0, 1, 4, 5);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.kun_label, 0, 1, 5, 6);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.trans_label, 0, 1, 6, 7);
+		gtk_table_attach (GTK_TABLE (table1), w.kanji_label, 0, 1, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.key_label, 0, 1, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.stroke_label, 0, 1, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.on_label, 0, 1, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.kun_label, 0, 1, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.trans_label, 0, 1, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.kanji_entry, 1, 2, 1, 2);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.key_entry, 1, 2, 2, 3);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.stroke_spin, 1, 2, 3, 4);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.on_entry, 1, 2, 4, 5);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.kun_entry, 1, 2, 5, 6);
-		gtk_table_attach_defaults (GTK_TABLE (table1), w.trans_entry, 1, 2, 6, 7);
+		gtk_table_attach (GTK_TABLE (table1), w.kanji_entry, 1, 2, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.key_entry, 1, 2, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.stroke_spin, 1, 2, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.on_entry, 1, 2, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.kun_entry, 1, 2, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table1), w.trans_entry, 1, 2, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
-		gtk_table_attach_defaults (GTK_TABLE (table1), expander, 0, 2, 7, 8);
+		gtk_table_attach (GTK_TABLE (table1), expander, 0, 2, 7, 8, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
 		gtk_table_set_row_spacings (GTK_TABLE (table1), 5);
 		gtk_table_set_col_spacings (GTK_TABLE (table1), 5);
