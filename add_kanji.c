@@ -2,11 +2,14 @@
 
 typedef struct
 {
+		GtkWidget *dialog;
 		GtkWidget *kanji_label, *on_label, *kun_label, *trans_label, *jlpt_label, *grade_label, *key_label, *stroke_label;
-		GtkWidget *kanji_entry, *on_entry, *kun_entry, *trans_entry, *jlpt_entry, *grade_entry, *key_entry, *stroke_entry;
+		GtkWidget *kanji_entry, *on_entry, *kun_entry, *trans_entry, *key_entry;
+		GtkWidget *jlpt_spin, *grade_spin, *stroke_spin;
 } Widgets;
 
 static int create_dialog (void);
+static void upd_entry (GtkWidget*, Widgets*);
 
 int main (int argc, char *argv[])
 {
@@ -19,84 +22,109 @@ int main (int argc, char *argv[])
 static int create_dialog (void)
 {
 		gint result;
-		guint16 l1, l2, l3, l4, l5, l6;
-		GtkWidget *dialog, *table, *lbl;
+		GtkWidget *table1, *table2, *lbl, *expander;
 		Widgets w;
 
-		dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
+		w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
 		
-		lbl = gtk_label_new ("Required fields sre marked with \'*\'");
+		lbl = gtk_label_new ("Required fields:");
 
-		w.kanji_label = gtk_label_new ("*Kanji:");
-		w.on_label = gtk_label_new ("*ON reading:");
-		w.kun_label = gtk_label_new ("*KUN reading:");
-		w.trans_label = gtk_label_new ("*Translation:");
+		w.kanji_label = gtk_label_new ("Kanji:");
+		w.on_label = gtk_label_new ("ON reading:");
+		w.kun_label = gtk_label_new ("KUN reading:");
+		w.trans_label = gtk_label_new ("Translation:");
 		w.jlpt_label = gtk_label_new ("JLPT Level:");
 		w.grade_label = gtk_label_new ("School Grade:");
-		w.key_label = gtk_label_new ("*Kanji Key:");
-		w.stroke_label = gtk_label_new ("*Number of Strokes:");
+		w.key_label = gtk_label_new ("Kanji Key:");
+		w.stroke_label = gtk_label_new ("Number of Strokes:");
 
 		w.kanji_entry = gtk_entry_new ();
 		w.on_entry = gtk_entry_new ();
 		w.kun_entry = gtk_entry_new ();
 		w.trans_entry = gtk_entry_new ();
-		w.jlpt_entry = gtk_entry_new ();
-		w.grade_entry = gtk_entry_new ();
 		w.key_entry = gtk_entry_new ();
-		w.stroke_entry = gtk_entry_new ();
 
-		table = gtk_table_new (9, 2, TRUE);
+		g_signal_connect (G_OBJECT (w.kanji_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
+		g_signal_connect (G_OBJECT (w.on_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
+		g_signal_connect (G_OBJECT (w.kun_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
+		g_signal_connect (G_OBJECT (w.trans_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
+		g_signal_connect (G_OBJECT (w.key_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
 
-		gtk_table_attach_defaults (GTK_TABLE (table), lbl, 0, 2, 0, 1);
+		w.jlpt_spin = gtk_spin_button_new_with_range (0.0, 5.0, 1.0);
+		w.grade_spin = gtk_spin_button_new_with_range (0.0, 9.0, 1.0);
+		w.stroke_spin = gtk_spin_button_new_with_range (0.0, 30.0, 1.0);
 
-		gtk_table_attach_defaults (GTK_TABLE (table), w.kanji_label, 0, 1, 1, 2);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.on_label, 0, 1, 2, 3);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.kun_label, 0, 1, 3, 4);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.trans_label, 0, 1, 4, 5);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.jlpt_label, 0, 1, 5, 6);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.grade_label, 0, 1, 6, 7);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.key_label, 0, 1, 7, 8);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.stroke_label, 0, 1, 8, 9);
+		gtk_spin_button_set_value (GTK_SPIN_BUTTON (w.jlpt_spin), 0.0);
+		gtk_spin_button_set_value (GTK_SPIN_BUTTON (w.grade_spin), 0.0);
+		gtk_spin_button_set_value (GTK_SPIN_BUTTON (w.stroke_spin), 0.0);
 
-		gtk_table_attach_defaults (GTK_TABLE (table), w.kanji_entry, 1, 2, 1, 2);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.on_entry, 1, 2, 2, 3);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.kun_entry, 1, 2, 3, 4);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.trans_entry, 1, 2, 4, 5);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.jlpt_entry, 1, 2, 5, 6);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.grade_entry, 1, 2, 6, 7);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.key_entry, 1, 2, 7, 8);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.stroke_entry, 1, 2, 8, 9);
+		g_signal_connect (G_OBJECT (w.stroke_spin), "value_changed", G_CALLBACK (upd_entry), (gpointer) &w);
 
-		gtk_table_set_row_spacings (GTK_TABLE (table), 5);
-		gtk_table_set_col_spacings (GTK_TABLE (table), 5);
+		table2 = gtk_table_new (2, 2, FALSE);
 
-		gtk_box_pack_start_defaults (GTK_BOX (GTK_DIALOG (dialog)->vbox), table);
-		gtk_widget_show_all (dialog);
+		gtk_table_attach_defaults (GTK_TABLE (table2), w.jlpt_label, 0, 1, 1, 2);
+		gtk_table_attach_defaults (GTK_TABLE (table2), w.grade_label, 0, 1, 2, 3);
 
-		while (1)
-		{
-				result = gtk_dialog_run (GTK_DIALOG (dialog));
+		gtk_table_attach_defaults (GTK_TABLE (table2), w.jlpt_spin, 1, 2, 1, 2);
+		gtk_table_attach_defaults (GTK_TABLE (table2), w.grade_spin, 1, 2, 2, 3);
+		
+		expander = gtk_expander_new ("Optional fields");
+		gtk_container_add (GTK_CONTAINER (expander), table2);
 
-				if (result == GTK_RESPONSE_OK)
-				{
-						l1 = gtk_entry_get_text_length (GTK_ENTRY (w.kanji_entry));
-						l2 = gtk_entry_get_text_length (GTK_ENTRY (w.on_entry));
-						l3 = gtk_entry_get_text_length (GTK_ENTRY (w.kun_entry));
-						l4 = gtk_entry_get_text_length (GTK_ENTRY (w.trans_entry));
-						l5 = gtk_entry_get_text_length (GTK_ENTRY (w.key_entry));
-						l6 = gtk_entry_get_text_length (GTK_ENTRY (w.stroke_entry));
+		gtk_table_set_row_spacings (GTK_TABLE (table2), 5);
+		gtk_table_set_col_spacings (GTK_TABLE (table2), 5);
 
-						if (l1 && l2 && l3 && l4 && l5 && l6)
-								break;
-						else
-						{
-								g_warning ("You Should Fill Required Entries");
-						}
-				}
-				else
-						break;
-		}
+		table1 = gtk_table_new (8, 2, FALSE);
 
-		gtk_widget_destroy (dialog);
+		gtk_table_attach_defaults (GTK_TABLE (table1), lbl, 0, 1, 0, 1);
+
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.kanji_label, 0, 1, 1, 2);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.key_label, 0, 1, 2, 3);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.stroke_label, 0, 1, 3, 4);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.on_label, 0, 1, 4, 5);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.kun_label, 0, 1, 5, 6);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.trans_label, 0, 1, 6, 7);
+
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.kanji_entry, 1, 2, 1, 2);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.key_entry, 1, 2, 2, 3);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.stroke_spin, 1, 2, 3, 4);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.on_entry, 1, 2, 4, 5);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.kun_entry, 1, 2, 5, 6);
+		gtk_table_attach_defaults (GTK_TABLE (table1), w.trans_entry, 1, 2, 6, 7);
+
+		gtk_table_attach_defaults (GTK_TABLE (table1), expander, 0, 2, 7, 8);
+
+		gtk_table_set_row_spacings (GTK_TABLE (table1), 5);
+		gtk_table_set_col_spacings (GTK_TABLE (table1), 5);
+
+		gtk_box_pack_start_defaults (GTK_BOX (GTK_DIALOG (w.dialog)->vbox), table1);
+		
+		gtk_dialog_set_response_sensitive (GTK_DIALOG (w.dialog), GTK_RESPONSE_OK, FALSE);
+		gtk_dialog_set_has_separator (GTK_DIALOG (w.dialog), FALSE);
+
+		gtk_widget_show_all (w.dialog);
+		result = gtk_dialog_run (GTK_DIALOG (w.dialog));
+		
+		gtk_widget_destroy (w.dialog);
 		return 0;
 }
+
+static void upd_entry (GtkWidget *cw, Widgets *w)
+{
+		gint val;
+		guint16 l1, l2, l3, l4, l5;
+
+		l1 = gtk_entry_get_text_length (GTK_ENTRY (w->kanji_entry));
+		l2 = gtk_entry_get_text_length (GTK_ENTRY (w->key_entry));
+		l3 = gtk_entry_get_text_length (GTK_ENTRY (w->on_entry));
+		l4 = gtk_entry_get_text_length (GTK_ENTRY (w->kun_entry));
+		l5 = gtk_entry_get_text_length (GTK_ENTRY (w->trans_entry));
+
+		val = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
+
+		if (val && l1 && l2 && l3 && l4 && l5)
+				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, TRUE);
+		else
+				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, FALSE);
+}
+
