@@ -27,7 +27,7 @@ static int create_dialog (void)
 
 		w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
 
-		gtk_container_set_border_width (GTK_CONTAINER (w.dialog), 10);
+		gtk_container_set_border_width (GTK_CONTAINER (w.dialog), 5);
 		
 		lbl = gtk_label_new ("Required fields:");
 
@@ -71,12 +71,13 @@ static int create_dialog (void)
 		gtk_table_attach (GTK_TABLE (table2), w.grade_spin, 1, 2, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		
 		expander = gtk_expander_new ("Optional fields");
+	//	gtk_expander_set_expanded (GTK_EXPANDER (expander), TRUE);
 		gtk_container_add (GTK_CONTAINER (expander), table2);
 
 		gtk_table_set_row_spacings (GTK_TABLE (table2), 5);
 		gtk_table_set_col_spacings (GTK_TABLE (table2), 5);
 
-		table1 = gtk_table_new (8, 2, FALSE);
+		table1 = gtk_table_new (7, 2, FALSE);
 
 		gtk_table_attach (GTK_TABLE (table1), lbl, 0, 1, 0, 1, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
@@ -94,12 +95,13 @@ static int create_dialog (void)
 		gtk_table_attach (GTK_TABLE (table1), w.kun_entry, 1, 2, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach (GTK_TABLE (table1), w.trans_entry, 1, 2, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
-		gtk_table_attach (GTK_TABLE (table1), expander, 0, 2, 7, 8, GTK_EXPAND, GTK_SHRINK, 0, 0);
+	//	gtk_table_attach (GTK_TABLE (table1), expander, 0, 2, 7, 8, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
 		gtk_table_set_row_spacings (GTK_TABLE (table1), 5);
 		gtk_table_set_col_spacings (GTK_TABLE (table1), 5);
 
-		gtk_box_pack_start_defaults (GTK_BOX (GTK_DIALOG (w.dialog)->vbox), table1);
+		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (w.dialog)->vbox), table1, FALSE, FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (w.dialog)->vbox), expander, FALSE, FALSE, 5);
 		
 		gtk_dialog_set_response_sensitive (GTK_DIALOG (w.dialog), GTK_RESPONSE_OK, FALSE);
 		gtk_dialog_set_has_separator (GTK_DIALOG (w.dialog), FALSE);
