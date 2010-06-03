@@ -19,20 +19,22 @@ int main (int argc, char *argv[])
 static int create_dialog (void)
 {
 		gint result;
-		guint16 length;
-		GtkWidget *dialog, *table;
+		guint16 l1, l2, l3, l4, l5, l6;
+		GtkWidget *dialog, *table, *lbl;
 		Widgets w;
 
 		dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
+		
+		lbl = gtk_label_new ("Required fields sre marked with \'*\'");
 
-		w.kanji_label = gtk_label_new ("Kanji:");
-		w.on_label = gtk_label_new ("ON reading:");
-		w.kun_label = gtk_label_new ("KUN reading:");
-		w.trans_label = gtk_label_new ("Translation:");
+		w.kanji_label = gtk_label_new ("*Kanji:");
+		w.on_label = gtk_label_new ("*ON reading:");
+		w.kun_label = gtk_label_new ("*KUN reading:");
+		w.trans_label = gtk_label_new ("*Translation:");
 		w.jlpt_label = gtk_label_new ("JLPT Level:");
 		w.grade_label = gtk_label_new ("School Grade:");
-		w.key_label = gtk_label_new ("Kanji Key:");
-		w.stroke_label = gtk_label_new ("Number of Strokes:");
+		w.key_label = gtk_label_new ("*Kanji Key:");
+		w.stroke_label = gtk_label_new ("*Number of Strokes:");
 
 		w.kanji_entry = gtk_entry_new ();
 		w.on_entry = gtk_entry_new ();
@@ -43,24 +45,27 @@ static int create_dialog (void)
 		w.key_entry = gtk_entry_new ();
 		w.stroke_entry = gtk_entry_new ();
 
-		table = gtk_table_new (8, 2, FALSE);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.kanji_label, 0, 1, 0, 1);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.on_label, 0, 1, 1, 2);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.kun_label, 0, 1, 2, 3);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.trans_label, 0, 1, 3, 4);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.jlpt_label, 0, 1, 4, 5);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.grade_label, 0, 1, 5, 6);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.key_label, 0, 1, 6, 7);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.stroke_label, 0, 1, 7, 8);
+		table = gtk_table_new (9, 2, TRUE);
 
-		gtk_table_attach_defaults (GTK_TABLE (table), w.kanji_entry, 1, 2, 0, 1);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.on_entry, 1, 2, 1, 2);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.kun_entry, 1, 2, 2, 3);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.trans_entry, 1, 2, 3, 4);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.jlpt_entry, 1, 2, 4, 5);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.grade_entry, 1, 2, 5, 6);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.key_entry, 1, 2, 6, 7);
-		gtk_table_attach_defaults (GTK_TABLE (table), w.stroke_entry, 1, 2, 7, 8);
+		gtk_table_attach_defaults (GTK_TABLE (table), lbl, 0, 2, 0, 1);
+
+		gtk_table_attach_defaults (GTK_TABLE (table), w.kanji_label, 0, 1, 1, 2);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.on_label, 0, 1, 2, 3);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.kun_label, 0, 1, 3, 4);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.trans_label, 0, 1, 4, 5);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.jlpt_label, 0, 1, 5, 6);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.grade_label, 0, 1, 6, 7);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.key_label, 0, 1, 7, 8);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.stroke_label, 0, 1, 8, 9);
+
+		gtk_table_attach_defaults (GTK_TABLE (table), w.kanji_entry, 1, 2, 1, 2);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.on_entry, 1, 2, 2, 3);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.kun_entry, 1, 2, 3, 4);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.trans_entry, 1, 2, 4, 5);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.jlpt_entry, 1, 2, 5, 6);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.grade_entry, 1, 2, 6, 7);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.key_entry, 1, 2, 7, 8);
+		gtk_table_attach_defaults (GTK_TABLE (table), w.stroke_entry, 1, 2, 8, 9);
 
 		gtk_table_set_row_spacings (GTK_TABLE (table), 5);
 		gtk_table_set_col_spacings (GTK_TABLE (table), 5);
@@ -74,12 +79,19 @@ static int create_dialog (void)
 
 				if (result == GTK_RESPONSE_OK)
 				{
-						length = gtk_entry_get_text_length (GTK_ENTRY (w.kanji_entry));
+						l1 = gtk_entry_get_text_length (GTK_ENTRY (w.kanji_entry));
+						l2 = gtk_entry_get_text_length (GTK_ENTRY (w.on_entry));
+						l3 = gtk_entry_get_text_length (GTK_ENTRY (w.kun_entry));
+						l4 = gtk_entry_get_text_length (GTK_ENTRY (w.trans_entry));
+						l5 = gtk_entry_get_text_length (GTK_ENTRY (w.key_entry));
+						l6 = gtk_entry_get_text_length (GTK_ENTRY (w.stroke_entry));
 
-						if (length == 0)
-								g_print ("FFFUUU");
-						else
+						if (l1 && l2 && l3 && l4 && l5 && l6)
 								break;
+						else
+						{
+								g_warning ("You Should Fill Required Entries");
+						}
 				}
 				else
 						break;
