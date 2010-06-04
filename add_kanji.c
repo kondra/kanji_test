@@ -49,6 +49,7 @@ static int create_dialog (void)
 		w->trans_entry = gtk_entry_new ();
 		w->key_entry = gtk_entry_new ();
 
+		g_object_set (w->kanji_entry, "im-module", "scim", NULL);
 		font_desc = pango_font_description_new ();
 		pango_font_description_set_size (font_desc, 45000);
 		gtk_widget_modify_font (GTK_WIDGET (w->kanji_entry), font_desc);
