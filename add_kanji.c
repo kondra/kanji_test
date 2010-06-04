@@ -115,6 +115,7 @@ static int create_dialog (void)
 		result = gtk_dialog_run (GTK_DIALOG (w->dialog));
 		
 		gtk_widget_destroy (w->dialog);
+		g_slice_free (Widgets, w);
 
 		return 0;
 }
