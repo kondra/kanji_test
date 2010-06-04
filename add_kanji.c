@@ -23,6 +23,7 @@ static int create_dialog (void)
 {
 		gint result;
 		GtkWidget *table1, *table2, *lbl, *expander;
+		PangoFontDescription *font_desc;
 		Widgets w;
 
 		w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
@@ -45,6 +46,11 @@ static int create_dialog (void)
 		w.kun_entry = gtk_entry_new ();
 		w.trans_entry = gtk_entry_new ();
 		w.key_entry = gtk_entry_new ();
+
+		font_desc = pango_font_description_new ();
+		pango_font_description_set_size (font_desc, 45000);
+		gtk_widget_modify_font (GTK_WIDGET (w.kanji_entry), font_desc);
+		gtk_widget_modify_font (GTK_WIDGET (w.key_entry), font_desc);
 
 		g_signal_connect (G_OBJECT (w.kanji_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
 		g_signal_connect (G_OBJECT (w.on_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
@@ -126,7 +132,7 @@ static void upd_entry (GtkWidget *cw, Widgets *w)
 
 		val = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
 
-		if (val && l1 && l2 && l3 && l4 && l5)
+		if (val && l1 && l2 && (l3 || l4) && l5)
 				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, TRUE);
 		else
 				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, FALSE);
