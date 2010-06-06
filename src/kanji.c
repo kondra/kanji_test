@@ -1,18 +1,20 @@
 #include <errno.h>
+#include <string.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 #include "kanji.h"
 
 int main (int argc, char *argv[])
 {
-//		Kanji *k1 = kanji_create ("行", "行", "い・く,ゆ・く,おこな・う,おこな・い", "コウ,ギョウ,*アン", "go,come,visit,attend,leave for,lead to", 1, 2, 6);
-//		Kanji *k2 = kanji_create ("参", "厶", "まい・る", "サン", "go, come, visit", 1, 4, 8);
-//		Kanji *k3 = kanji_create ("一", "一", "ひと,ひと・つ", "イチ,イツ", "one,unity", 1, 1, 1);
-//		GArray *arr = kanji_array_create;
-//		arr = kanji_array_append (arr, k1);
-//		arr = kanji_array_append (arr, k2);
-//		arr = kanji_array_append (arr, k3);
-//		kanji_array_save ("output", arr);
+		Kanji *k1 = kanji_create ("行", "行", "い・く,ゆ・く,おこな・う,おこな・い", "コウ,ギョウ,*アン", "go,come,visit,attend,leave for,lead to", 1, 2, 6);
+		Kanji *k2 = kanji_create ("参", "厶", "まい・る", "サン", "go,come,visit", 1, 4, 8);
+		Kanji *k3 = kanji_create ("一", "一", " ", "イチ,イツ", "one,unity", 1, 1, 1);
+		GArray *arr = kanji_array_create;
+		arr = kanji_array_append (arr, k1);
+		arr = kanji_array_append (arr, k2);
+		arr = kanji_array_append (arr, k3);
+		kanji_array_save ("output", arr);
 		GArray *arr1 = kanji_array_load ("output");
 		if (arr1 == NULL){
 				g_error ("Sorry, an error has occured during reading file output");
@@ -135,26 +137,26 @@ GArray* kanji_array_load (const gchar *filename)
 				len = strlen (buf + pos);
 				k->kun = g_malloc0 (len * sizeof (gchar));
 				sscanf (buf + pos, "%s", k->kun);
-/*				if (k->kun == NULL)
+				if (k->kun == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
 						kanji_array_free (arr);
 						arr = NULL;
 						break;
 				}
-*/				pos += len + 1;
+				pos += len + 1;
 
 				len = strlen (buf + pos);
 				k->on = g_malloc0 (len * sizeof (gchar));
 				sscanf (buf + pos, "%s", k->on);
-/*				if (k->on == NULL)
+				if (k->on == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
 						kanji_array_free (arr);
 						arr = NULL;
 						break;
 				}
-*/				pos += len + 1;
+				pos += len + 1;
 
 				len = strlen (buf + pos);
 				k->trans = g_malloc0 (len * sizeof (gchar));
