@@ -26,6 +26,7 @@ Kanji* create_dialog (void)
 {
 		gint result;
 		PangoFontDescription *font_desc;
+		GList *focus_chain = NULL;//temp solution
 		Widgets *w;
 
 		w = g_slice_new (Widgets);
@@ -113,6 +114,15 @@ Kanji* create_dialog (void)
 		gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, FALSE);
 		gtk_dialog_set_has_separator (GTK_DIALOG (w->dialog), FALSE);
 
+		focus_chain = g_list_append (focus_chain, w->kanji_entry);
+		focus_chain = g_list_append (focus_chain, w->radical_entry);
+		focus_chain = g_list_append (focus_chain, w->stroke_spin);
+		focus_chain = g_list_append (focus_chain, w->on_entry);
+		focus_chain = g_list_append (focus_chain, w->kun_entry);
+		focus_chain = g_list_append (focus_chain, w->trans_entry);
+
+		gtk_container_set_focus_chain (GTK_CONTAINER (w->table1), focus_chain);
+
 		gtk_widget_show_all (w->dialog);
 		result = gtk_dialog_run (GTK_DIALOG (w->dialog));
 
@@ -129,12 +139,14 @@ Kanji* create_dialog (void)
 				gint grade = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
 
 				gtk_widget_destroy (w->dialog);
+				g_list_free (focus_chain);
 				g_slice_free (Widgets, w);
 
 				return kanji_create (kanji_str, radical_str, kun_str, on_str, trans_str, jlpt_lvl, grade, stroke_cnt);
 		}
 		
 		gtk_widget_destroy (w->dialog);
+		g_list_free (focus_chain);
 		g_slice_free (Widgets, w);
 
 		return NULL;
