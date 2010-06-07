@@ -2,7 +2,7 @@
 CC = gcc
 CFLAGS = -Wall -g `pkg-config --cflags --libs gtk+-2.0`
 
-OBJ = kanji.o add_kanji.o
+OBJ = kanji.o add_kanji.o main.o
 TARGET = kanji_test
 
 #all: 
@@ -11,7 +11,9 @@ TARGET = kanji_test
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET)
 
-$(OBJ): kanji.h
+kanji.o: kanji.h
+add_kanji.o: add_kanji.h kanji.h
+main.o: add_kanji.h kanji.h
 
 clean:
-	rm -f add_kanji *.o 
+	rm -f $(TARGET) *.o 
