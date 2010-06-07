@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <gtk/gtk.h>
 
 #include "kanji.h"
 
@@ -204,7 +205,7 @@ void kanji_array_save (const gchar *filename, GArray *arr)
 
 void kanji_array_free (GArray *arr)
 {
-		int i;
+	/*	int i;
 		Kanji *k;
 		
 		k = &g_array_index (arr, Kanji, i = 0);
@@ -213,11 +214,11 @@ void kanji_array_free (GArray *arr)
 				kanji_free (k);
 				k = &g_array_index (arr, Kanji, ++i);
 		}
-
+	*/
 		g_array_free (arr, TRUE);
 }
 
-//deprecated function ^_^
+//bad function ^_^
 void kanji_free (Kanji *k)
 {
 		g_free (k->str);
