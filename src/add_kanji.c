@@ -1,5 +1,7 @@
 #include <gtk/gtk.h>
 
+#include "kanji.h"
+
 typedef struct
 {
 		GtkWidget *dialog, *table1, *table2, *lbl, *expander;
@@ -7,18 +9,34 @@ typedef struct
 		GtkWidget *kanji_entry, *on_entry, *kun_entry, *trans_entry, *radical_entry, *jlpt_spin, *grade_spin, *stroke_spin;
 } Widgets;
 
-static int create_dialog (void);
+static Kanji* create_dialog (void);
 static void upd_entry (GtkWidget*, Widgets*);
 
 int main (int argc, char *argv[])
 {
 		gtk_init (&argc, &argv);
-		create_dialog ();
-		
+		Kanji *tmp = create_dialog ();
+
+		if (tmp == NULL)
+				return 0;
+
+		GArray *arr = kanji_array_load ("output");
+		if (arr == NULL)
+		{
+				arr = kanji_array_create;
+				arr = kanji_array_append (arr, tmp);
+				kanji_array_save ("output", arr);
+		}
+		else
+		{
+				arr = kanji_array_append (arr, tmp);
+				kanji_array_save ("output", arr);
+		}
+
 		return 0;
 }
 
-static int create_dialog (void)
+static Kanji* create_dialog (void)
 {
 		gint result;
 		PangoFontDescription *font_desc;
@@ -111,11 +129,26 @@ static int create_dialog (void)
 
 		gtk_widget_show_all (w->dialog);
 		result = gtk_dialog_run (GTK_DIALOG (w->dialog));
+
+		if (result == GTK_RESPONSE_OK)
+		{
+				const gchar *kanji_str = gtk_entry_get_text (GTK_ENTRY (w->kanji_entry));
+				const gchar *on_str = gtk_entry_get_text (GTK_ENTRY (w->on_entry));
+				const gchar *kun_str = gtk_entry_get_text (GTK_ENTRY (w->kun_entry));
+				const gchar *trans_str = gtk_entry_get_text (GTK_ENTRY (w->trans_entry));
+				const gchar *radical_str = gtk_entry_get_text (GTK_ENTRY (w->radical_entry));
+
+				gint stroke_cnt = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
+				gint jlpt_lvl = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
+				gint grade = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
+
+				return kanji_create (kanji_str, radical_str, kun_str, on_str, trans_str, jlpt_lvl, grade, stroke_cnt);
+		}
 		
 		gtk_widget_destroy (w->dialog);
 		g_slice_free (Widgets, w);
 
-		return 0;
+		return NULL;
 }
 
 static void upd_entry (GtkWidget *cw, Widgets *w)

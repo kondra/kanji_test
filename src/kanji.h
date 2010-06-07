@@ -1,3 +1,7 @@
+#ifndef KANJI_INCLUDE
+
+#define KANJI_INCLUDE
+
 #include <glib.h>
 #include <string.h>
 #include <stdio.h>
@@ -9,8 +13,6 @@ typedef struct
 } Kanji;
 
 #define kanji_array_create g_array_new (TRUE, TRUE, sizeof (Kanji))
-
-static gboolean kanji_is_null (Kanji *k);
 
 Kanji* kanji_create_empty (void);
 
@@ -25,3 +27,5 @@ void kanji_array_save (const gchar *filename, GArray *arr);
 void kanji_array_free (GArray *arr);
 
 void kanji_free (Kanji *k);
+
+#endif

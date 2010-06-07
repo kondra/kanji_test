@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 
 #include "kanji.h"
-
+/*
 int main (int argc, char *argv[])
 {
 		Kanji *k1 = kanji_create ("行", "行", "い・く,ゆ・く,おこな・う,おこな・い", "コウ,ギョウ,*アン", "go,come,visit,attend,leave for,lead to", 1, 2, 6);
@@ -40,7 +40,7 @@ int main (int argc, char *argv[])
 
 		return 0;
 }
-
+*/
 static gboolean kanji_is_null (Kanji *k)
 {
 		if (k->jlpt_level || k->grade || k->stroke || k->str != NULL || k->kun != NULL || k->on != NULL || k->trans != NULL || k->radical != NULL)
@@ -95,6 +95,12 @@ GArray* kanji_array_load (const gchar *filename)
 		struct stat statbuf;
 		unsigned int size;
 		Kanji *k;
+
+		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
+		{
+				g_warning ("file %s not exist", filename);
+				return NULL;
+		}
 
 		if (lstat (filename, &statbuf))
 				g_error ("could not lstat %s: %s", filename, strerror (errno));
