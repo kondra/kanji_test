@@ -2,10 +2,6 @@
 
 #define KANJI_INCLUDE
 
-#include <glib.h>
-#include <string.h>
-#include <stdio.h>
-
 typedef struct
 {
 		int jlpt_level, grade, stroke;
