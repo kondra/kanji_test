@@ -22,6 +22,8 @@ Kanji* kanji_create_empty (void)
 
 Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, const gchar *on, const gchar *trans, int jlpt_level, int grade, int stroke)
 {
+		guint len;
+
 		Kanji *k = (Kanji*) g_malloc0 (sizeof (Kanji));
 
 		k->str = (gchar*) g_malloc0 (sizeof (gchar) * strlen (str));
@@ -30,10 +32,12 @@ Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, c
 		k->radical = (gchar*) g_malloc0 (sizeof (gchar) * strlen (radical));
 		strcpy (k->radical, radical);
 		
-		k->kun = (gchar*) g_malloc0 (sizeof (gchar) * strlen (kun));
+		len = sizeof (gchar) * strlen (kun);
+		k->kun = (gchar*) g_malloc0 (len == 0 ? 1 : len);
 		strcpy (k->kun, kun);
 		
-		k->on = (gchar*) g_malloc0 (sizeof (gchar) * strlen (on));
+		len = sizeof (gchar) * strlen (on);
+		k->on = (gchar*) g_malloc0 (len == 0 ? 1 : len);
 		strcpy (k->on, on);
 		
 		k->trans = (gchar*) g_malloc0 (sizeof (gchar) * strlen (trans));
