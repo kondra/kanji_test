@@ -4,43 +4,7 @@
 #include <sys/stat.h>
 
 #include "kanji.h"
-/*
-int main (int argc, char *argv[])
-{
-		Kanji *k1 = kanji_create ("行", "行", "い・く,ゆ・く,おこな・う,おこな・い", "コウ,ギョウ,*アン", "go,come,visit,attend,leave for,lead to", 1, 2, 6);
-		Kanji *k2 = kanji_create ("参", "厶", "まい・る", "サン", "go,come,visit", 1, 4, 8);
-		Kanji *k3 = kanji_create ("一", "一", " ", "イチ,イツ", "one,unity", 1, 1, 1);
-		GArray *arr = kanji_array_create;
-		arr = kanji_array_append (arr, k1);
-		arr = kanji_array_append (arr, k2);
-		arr = kanji_array_append (arr, k3);
-		kanji_array_save ("output", arr);
-		GArray *arr1 = kanji_array_load ("output");
-		if (arr1 == NULL){
-				g_error ("Sorry, an error has occured during reading file output");
-		}
-		kanji_array_save ("output1", arr1);
 
-		int i = 0;
-		Kanji *k = &g_array_index (arr1, Kanji, i = 0);
-		while (k == NULL || !kanji_is_null (k))
-		{
-				printf ("%d:\n", i + 1);
-				printf ("Kanji: %s\n", k->str);
-				printf ("ON reading: %s\n", k->on);
-				printf ("Kun reading: %s\n", k->kun);
-				printf ("Meaning: %s\n", k->trans);
-				printf ("Radical: %s\n", k->radical);
-				printf ("Stroke count: %d\n", k->stroke);
-				printf ("JLPT level: %d\n", k->jlpt_level);
-				printf ("School grade: %d\n", k->grade);
-				k = &g_array_index (arr1, Kanji, ++i);
-		}
-//		kanji_array_free (arr);
-
-		return 0;
-}
-*/
 static gboolean kanji_is_null (Kanji *k)
 {
 		if (k->jlpt_level || k->grade || k->stroke || k->str != NULL || k->kun != NULL || k->on != NULL || k->trans != NULL || k->radical != NULL)
@@ -81,11 +45,13 @@ Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, c
 		return k;
 }
 
+//TODO: write a macro
 GArray* kanji_array_append (GArray *arr, Kanji *k)
 {
 		return g_array_append_val (arr, *k);
 }
 
+//TODO: more smart reading kun on and translation, mb without sscanf
 GArray* kanji_array_load (const gchar *filename)
 {
 		FILE *f;
@@ -251,6 +217,7 @@ void kanji_array_free (GArray *arr)
 		g_array_free (arr, TRUE);
 }
 
+//deprecated function ^_^
 void kanji_free (Kanji *k)
 {
 		g_free (k->str);
