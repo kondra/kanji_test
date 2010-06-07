@@ -1,42 +1,28 @@
 #include <gtk/gtk.h>
 
 #include "kanji.h"
+#include "add_kanji.h"
 
-typedef struct
+void upd_entry (GtkWidget *cw, Widgets *w)
 {
-		GtkWidget *dialog, *table1, *table2, *lbl, *expander;
-		GtkWidget *kanji_label, *on_label, *kun_label, *trans_label, *jlpt_label, *grade_label, *radical_label, *stroke_label;
-		GtkWidget *kanji_entry, *on_entry, *kun_entry, *trans_entry, *radical_entry, *jlpt_spin, *grade_spin, *stroke_spin;
-} Widgets;
+		gint val;
+		guint16 l1, l2, l3, l4, l5;
 
-static Kanji* create_dialog (void);
-static void upd_entry (GtkWidget*, Widgets*);
+		l1 = gtk_entry_get_text_length (GTK_ENTRY (w->kanji_entry));
+		l2 = gtk_entry_get_text_length (GTK_ENTRY (w->radical_entry));
+		l3 = gtk_entry_get_text_length (GTK_ENTRY (w->on_entry));
+		l4 = gtk_entry_get_text_length (GTK_ENTRY (w->kun_entry));
+		l5 = gtk_entry_get_text_length (GTK_ENTRY (w->trans_entry));
 
-int main (int argc, char *argv[])
-{
-		gtk_init (&argc, &argv);
-		Kanji *tmp = create_dialog ();
+		val = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
 
-		if (tmp == NULL)
-				return 0;
-
-		GArray *arr = kanji_array_load ("output");
-		if (arr == NULL)
-		{
-				arr = kanji_array_create;
-				arr = kanji_array_append (arr, tmp);
-				kanji_array_save ("output", arr);
-		}
+		if (val && l1 && l2 && (l3 || l4) && l5)
+				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, TRUE);
 		else
-		{
-				arr = kanji_array_append (arr, tmp);
-				kanji_array_save ("output", arr);
-		}
-
-		return 0;
+				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, FALSE);
 }
 
-static Kanji* create_dialog (void)
+Kanji* create_dialog (void)
 {
 		gint result;
 		PangoFontDescription *font_desc;
@@ -142,6 +128,9 @@ static Kanji* create_dialog (void)
 				gint jlpt_lvl = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
 				gint grade = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
 
+				gtk_widget_destroy (w->dialog);
+				g_slice_free (Widgets, w);
+
 				return kanji_create (kanji_str, radical_str, kun_str, on_str, trans_str, jlpt_lvl, grade, stroke_cnt);
 		}
 		
@@ -150,23 +139,3 @@ static Kanji* create_dialog (void)
 
 		return NULL;
 }
-
-static void upd_entry (GtkWidget *cw, Widgets *w)
-{
-		gint val;
-		guint16 l1, l2, l3, l4, l5;
-
-		l1 = gtk_entry_get_text_length (GTK_ENTRY (w->kanji_entry));
-		l2 = gtk_entry_get_text_length (GTK_ENTRY (w->radical_entry));
-		l3 = gtk_entry_get_text_length (GTK_ENTRY (w->on_entry));
-		l4 = gtk_entry_get_text_length (GTK_ENTRY (w->kun_entry));
-		l5 = gtk_entry_get_text_length (GTK_ENTRY (w->trans_entry));
-
-		val = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
-
-		if (val && l1 && l2 && (l3 || l4) && l5)
-				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, TRUE);
-		else
-				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, FALSE);
-}
-
