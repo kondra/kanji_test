@@ -101,7 +101,7 @@ GArray* kanji_array_load (const gchar *filename)
 
 				len = strlen (buf);
 				k->str = g_malloc0 (len * sizeof (gchar));
-				sscanf (buf, "%s", k->str);
+				strcpy (k->str, buf);
 				if (k->str == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
@@ -113,7 +113,7 @@ GArray* kanji_array_load (const gchar *filename)
 
 				len = strlen (buf + pos);
 				k->kun = g_malloc0 (len * sizeof (gchar));
-				sscanf (buf + pos, "%s", k->kun);
+				strcpy (k->kun, buf + pos);
 				if (k->kun == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
@@ -125,7 +125,7 @@ GArray* kanji_array_load (const gchar *filename)
 
 				len = strlen (buf + pos);
 				k->on = g_malloc0 (len * sizeof (gchar));
-				sscanf (buf + pos, "%s", k->on);
+				strcpy (k->on, buf + pos);
 				if (k->on == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
@@ -137,7 +137,7 @@ GArray* kanji_array_load (const gchar *filename)
 
 				len = strlen (buf + pos);
 				k->trans = g_malloc0 (len * sizeof (gchar));
-				sscanf (buf + pos, "%s", k->trans);
+				strcpy (k->trans, buf +pos);
 				if (k->trans == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
@@ -149,7 +149,7 @@ GArray* kanji_array_load (const gchar *filename)
 				
 				len = strlen (buf + pos);
 				k->radical = g_malloc0 (len * sizeof (gchar));
-				sscanf (buf + pos, "%s", k->radical);
+				strcpy (k->radical, buf + pos);
 				if (k->radical == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
