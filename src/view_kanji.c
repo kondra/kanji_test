@@ -30,7 +30,7 @@ void view_kanji (GArray *arr)
 
 		dialog = gtk_dialog_new_with_buttons ("Kanji List", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
 		gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
-//		gtk_widget_set_size_request (GTK_WIDGET (dialog), 400, 400);
+		gtk_widget_set_size_request (GTK_WIDGET (dialog), 750, 400);
 
 		treeview = gtk_tree_view_new ();
 		setup_tree_view (treeview);
