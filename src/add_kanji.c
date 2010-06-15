@@ -3,7 +3,7 @@
 #include "kanji.h"
 #include "add_kanji.h"
 
-void upd_entry (GtkWidget *cw, Widgets *w)
+static void upd_entry (GtkWidget *cw, Widgets *w)
 {
 		gint val;
 		guint16 l1, l2, l3, l4, l5;
@@ -25,8 +25,8 @@ void upd_entry (GtkWidget *cw, Widgets *w)
 Kanji* create_dialog (void)
 {
 		gint result;
-		PangoFontDescription *font_desc;
-		GList *focus_chain = NULL;//temp solution
+//		PangoFontDescription *font_desc;
+//		GList *focus_chain = NULL;//temp solution
 		Widgets *w;
 
 		w = g_slice_new (Widgets);
@@ -52,10 +52,10 @@ Kanji* create_dialog (void)
 		w->trans_entry = gtk_entry_new ();
 		w->radical_entry = gtk_entry_new ();
 
-		font_desc = pango_font_description_new ();
-		pango_font_description_set_size (font_desc, 45000);
-		gtk_widget_modify_font (GTK_WIDGET (w->kanji_entry), font_desc);
-		gtk_widget_modify_font (GTK_WIDGET (w->radical_entry), font_desc);
+//		font_desc = pango_font_description_new ();
+//		pango_font_description_set_size (font_desc, 45000);
+//		gtk_widget_modify_font (GTK_WIDGET (w->kanji_entry), font_desc);
+//		gtk_widget_modify_font (GTK_WIDGET (w->radical_entry), font_desc);
 
 		g_signal_connect (G_OBJECT (w->kanji_entry), "changed", G_CALLBACK (upd_entry), (gpointer) w);
 		g_signal_connect (G_OBJECT (w->on_entry), "changed", G_CALLBACK (upd_entry), (gpointer) w);
@@ -87,23 +87,23 @@ Kanji* create_dialog (void)
 		gtk_table_set_row_spacings (GTK_TABLE (w->table2), 5);
 		gtk_table_set_col_spacings (GTK_TABLE (w->table2), 5);
 
-		w->table1 = gtk_table_new (7, 4, FALSE);
+		w->table1 = gtk_table_new (7, 2, FALSE);
 
 		gtk_table_attach (GTK_TABLE (w->table1), w->lbl, 0, 1, 0, 1, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
 		gtk_table_attach (GTK_TABLE (w->table1), w->kanji_label, 0, 1, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->radical_label, 0, 1, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->stroke_label, 2, 3, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->on_label, 2, 3, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->kun_label, 2, 3, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->trans_label, 2, 3, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->radical_label, 0, 1, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->stroke_label, 0, 1, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->on_label, 0, 1, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->kun_label, 0, 1, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->trans_label, 0, 1, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
-		gtk_table_attach (GTK_TABLE (w->table1), w->kanji_entry, 1, 2, 1, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->radical_entry, 1, 2, 4, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->stroke_spin, 3, 4, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->on_entry, 3, 4, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->kun_entry, 3, 4, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (w->table1), w->trans_entry, 3, 4, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->kanji_entry, 1, 2, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->radical_entry, 1, 2, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->stroke_spin, 1, 2, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->on_entry, 1, 2, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->kun_entry, 1, 2, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (w->table1), w->trans_entry, 1, 2, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
 		gtk_table_set_row_spacings (GTK_TABLE (w->table1), 5);
 		gtk_table_set_col_spacings (GTK_TABLE (w->table1), 5);
@@ -114,14 +114,14 @@ Kanji* create_dialog (void)
 		gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, FALSE);
 		gtk_dialog_set_has_separator (GTK_DIALOG (w->dialog), FALSE);
 
-		focus_chain = g_list_append (focus_chain, w->kanji_entry);
-		focus_chain = g_list_append (focus_chain, w->radical_entry);
-		focus_chain = g_list_append (focus_chain, w->stroke_spin);
-		focus_chain = g_list_append (focus_chain, w->on_entry);
-		focus_chain = g_list_append (focus_chain, w->kun_entry);
-		focus_chain = g_list_append (focus_chain, w->trans_entry);
+		//focus_chain = g_list_append (focus_chain, w->kanji_entry);
+		//focus_chain = g_list_append (focus_chain, w->radical_entry);
+		//focus_chain = g_list_append (focus_chain, w->stroke_spin);
+		//focus_chain = g_list_append (focus_chain, w->on_entry);
+		//focus_chain = g_list_append (focus_chain, w->kun_entry);
+		//focus_chain = g_list_append (focus_chain, w->trans_entry);
 
-		gtk_container_set_focus_chain (GTK_CONTAINER (w->table1), focus_chain);
+//		gtk_container_set_focus_chain (GTK_CONTAINER (w->table1), focus_chain);
 
 		gtk_widget_show_all (w->dialog);
 		result = gtk_dialog_run (GTK_DIALOG (w->dialog));
@@ -139,14 +139,14 @@ Kanji* create_dialog (void)
 				gint grade = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
 
 				gtk_widget_destroy (w->dialog);
-				g_list_free (focus_chain);
+		//		g_list_free (focus_chain);
 				g_slice_free (Widgets, w);
 
 				return kanji_create (kanji_str, radical_str, kun_str, on_str, trans_str, jlpt_lvl, grade, stroke_cnt);
 		}
 		
 		gtk_widget_destroy (w->dialog);
-		g_list_free (focus_chain);
+//		g_list_free (focus_chain);
 		g_slice_free (Widgets, w);
 
 		return NULL;

@@ -11,6 +11,4 @@ typedef struct
 
 Kanji* create_dialog (void);
 
-void upd_entry (GtkWidget *cw, Widgets *w);
-
 #endif
