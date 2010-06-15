@@ -142,9 +142,9 @@ Kanji* create_dialog (void)
 				const gchar *radical_str = gtk_entry_get_text (GTK_ENTRY (w->radical_entry));
 
 				gint stroke_cnt = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
-				gint rst_cnt = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
-				gint jlpt_lvl = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->rst_spin));
-				gint grade = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
+				gint rst_cnt = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->rst_spin));
+				gint jlpt_lvl = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->jlpt_spin));
+				gint grade = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->grade_spin));
 
 		//		gtk_widget_destroy (w->dialog);
 		//		g_list_free (focus_chain);
