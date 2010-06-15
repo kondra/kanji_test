@@ -42,7 +42,7 @@ void view_kanji (GArray *arr)
 		{
 				gtk_list_store_append (store, &iter);
 				gtk_list_store_set (store, &iter, NUMBER, i + 1, KANJI, tmp->str, KANJI_STROKE, tmp->stroke, RADICAL, tmp->radical, RADICAL_STROKE, 0, ON, tmp->on,
-								KUN, tmp->kun, MEANING, tmp->trans, JLPT_LEVEL, tmp->jlpt_level, SCHOOL_GRADE, tmp->grade, -1);
+								KUN, tmp->kun, MEANING, tmp->meaning, JLPT_LEVEL, tmp->jlpt_level, SCHOOL_GRADE, tmp->grade, -1);
 
 				tmp = &g_array_index (arr, Kanji, ++i);
 		}

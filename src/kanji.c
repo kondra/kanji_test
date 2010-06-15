@@ -8,7 +8,7 @@
 
 gboolean kanji_is_null (Kanji *k)
 {
-		if (k->jlpt_level || k->grade || k->stroke || k->str != NULL || k->kun != NULL || k->on != NULL || k->trans != NULL || k->radical != NULL)
+		if (k->jlpt_level || k->grade || k->stroke || k->str != NULL || k->kun != NULL || k->on != NULL || k->meaning != NULL || k->radical != NULL)
 				return FALSE;
 		return TRUE;
 }
@@ -20,7 +20,7 @@ Kanji* kanji_create_empty (void)
 		return k;
 }
 
-Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, const gchar *on, const gchar *trans, int jlpt_level, int grade, int stroke)
+Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, const gchar *on, const gchar *meaning, int jlpt_level, int grade, int stroke)
 {
 		guint len;
 
@@ -40,8 +40,8 @@ Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, c
 		k->on = (gchar*) g_malloc0 (len == 0 ? 1 : len);
 		strcpy (k->on, on);
 		
-		k->trans = (gchar*) g_malloc0 (sizeof (gchar) * strlen (trans));
-		strcpy (k->trans, trans);
+		k->meaning = (gchar*) g_malloc0 (sizeof (gchar) * strlen (meaning));
+		strcpy (k->meaning, meaning);
 
 		k->jlpt_level = jlpt_level;
 		k->grade = grade;
@@ -136,9 +136,9 @@ GArray* kanji_array_load (const gchar *filename)
 				pos += len + 1;
 
 				len = strlen (buf + pos);
-				k->trans = g_malloc0 (len * sizeof (gchar));
-				strcpy (k->trans, buf +pos);
-				if (k->trans == NULL)
+				k->meaning = g_malloc0 (len * sizeof (gchar));
+				strcpy (k->meaning, buf +pos);
+				if (k->meaning == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
 						kanji_array_free (arr);
@@ -195,7 +195,7 @@ void kanji_array_save (const gchar *filename, GArray *arr)
 				fwrite (&b, sizeof (gchar), 1, f);
 				fwrite (k->on, sizeof (gchar), strlen (k->on), f);
 				fwrite (&b, sizeof (gchar), 1, f);
-				fwrite (k->trans, sizeof (gchar), strlen (k->trans), f);
+				fwrite (k->meaning, sizeof (gchar), strlen (k->meaning), f);
 				fwrite (&b, sizeof (gchar), 1, f);
 				fwrite (k->radical, sizeof (gchar), strlen (k->radical), f);
 				fwrite (&b, sizeof (gchar), 1, f);
@@ -228,7 +228,7 @@ void kanji_free (Kanji *k)
 		g_free (k->str);
 		g_free (k->kun);
 		g_free (k->on);
-		g_free (k->trans);
+		g_free (k->meaning);
 		g_free (k->radical);
 
 //		g_free (k);
