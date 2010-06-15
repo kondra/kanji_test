@@ -60,26 +60,41 @@ static void setup_tree_view (GtkWidget *treeview)
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Num", renderer, "text", NUMBER, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_reorderable (column, TRUE);
+		gtk_tree_view_column_set_sort_indicator (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, NUMBER);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Kanji", renderer, "text", KANJI, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_reorderable (column, TRUE);
+		gtk_tree_view_column_set_sort_indicator (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, KANJI);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 		
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Stroke", renderer, "text", KANJI_STROKE, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_reorderable (column, TRUE);
+		gtk_tree_view_column_set_sort_indicator (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, KANJI_STROKE);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 		
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Radical", renderer, "text", RADICAL, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_reorderable (column, TRUE);
+		gtk_tree_view_column_set_sort_indicator (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, RADICAL);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 		
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Stroke", renderer, "text", RADICAL_STROKE, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_reorderable (column, TRUE);
+		gtk_tree_view_column_set_sort_indicator (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, RADICAL_STROKE);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 		
 		renderer = gtk_cell_renderer_text_new ();
@@ -100,10 +115,16 @@ static void setup_tree_view (GtkWidget *treeview)
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("JLPT", renderer, "text", JLPT_LEVEL, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_reorderable (column, TRUE);
+		gtk_tree_view_column_set_sort_indicator (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, JLPT_LEVEL);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 		
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Grade", renderer, "text", SCHOOL_GRADE, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_reorderable (column, TRUE);
+		gtk_tree_view_column_set_sort_indicator (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, SCHOOL_GRADE);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 }
