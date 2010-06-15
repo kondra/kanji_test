@@ -8,7 +8,7 @@
 
 gboolean kanji_is_null (Kanji *k)
 {
-		if (k->jlpt_level || k->grade || k->stroke || k->str != NULL || k->kun != NULL || k->on != NULL || k->meaning != NULL || k->radical != NULL)
+		if (k->radical_stroke || k->jlpt_level || k->grade || k->stroke || k->str != NULL || k->kun != NULL || k->on != NULL || k->meaning != NULL || k->radical != NULL)
 				return FALSE;
 		return TRUE;
 }
@@ -20,7 +20,8 @@ Kanji* kanji_create_empty (void)
 		return k;
 }
 
-Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, const gchar *on, const gchar *meaning, int jlpt_level, int grade, int stroke)
+Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, const gchar *on, const gchar *meaning, 
+				int jlpt_level, int grade, int stroke, int radical_stroke)
 {
 		guint len;
 
@@ -46,6 +47,7 @@ Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, c
 		k->jlpt_level = jlpt_level;
 		k->grade = grade;
 		k->stroke = stroke;
+		k->radical_stroke = radical_stroke;
 
 		return k;
 }
@@ -56,7 +58,6 @@ GArray* kanji_array_append (GArray *arr, Kanji *k)
 		return g_array_append_val (arr, *k);
 }
 
-//TODO: more smart reading kun on and translation, mb without sscanf
 GArray* kanji_array_load (const gchar *filename)
 {
 		FILE *f;
@@ -93,6 +94,7 @@ GArray* kanji_array_load (const gchar *filename)
 				fread (&(k->jlpt_level), sizeof (int), 1, f);
 				fread (&(k->grade), sizeof (int), 1, f);
 				fread (&(k->stroke), sizeof (int), 1, f);
+				fread (&(k->radical_stroke), sizeof (int), 1, f);
 				fread (&b, sizeof (gchar), 1, f);
 
 				//add more smart reading
@@ -187,6 +189,7 @@ void kanji_array_save (const gchar *filename, GArray *arr)
 				fwrite (&(k->jlpt_level), sizeof (int), 1, f);
 				fwrite (&(k->grade), sizeof (int), 1, f);
 				fwrite (&(k->stroke), sizeof (int), 1, f);
+				fwrite (&(k->radical_stroke), sizeof (int), 1, f);
 				fwrite (&b, sizeof (gchar), 1, f);
 
 				fwrite (k->str, sizeof (gchar), strlen (k->str), f);

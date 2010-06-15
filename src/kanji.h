@@ -4,7 +4,7 @@
 
 typedef struct
 {
-		int jlpt_level, grade, stroke;
+		int jlpt_level, grade, stroke, radical_stroke;
 		gchar *str, *kun, *on, *meaning, *radical;
 } Kanji;
 
@@ -14,7 +14,8 @@ gboolean kanji_is_null (Kanji *k);
 
 Kanji* kanji_create_empty (void);
 
-Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, const gchar *on, const gchar *meaning, int jlpt_level, int grade, int stroke);
+Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, const gchar *on, const gchar *meaning, 
+				int jlpt_level, int grade, int stroke, int radical_stroke);
 
 GArray* kanji_array_append (GArray *arr, Kanji *k);
 

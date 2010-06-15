@@ -4,21 +4,7 @@
 #include "view_kanji.h"
 
 static void setup_tree_view (GtkWidget*);
-/*
-int main (int argc, char *argv[])
-{
-		gtk_init (&argc, &argv);
 
-		GArray *arr = kanji_array_load ("output");
-		if (arr == NULL)
-				return 0;
-
-		view_kanji (arr);
-
-		kanji_array_free (arr);
-		return 0;
-}
-*/
 void view_kanji (GArray *arr)
 {
 		GtkWidget *dialog, *treeview, *scrolled_win;
@@ -41,8 +27,9 @@ void view_kanji (GArray *arr)
 		while (tmp == NULL || !kanji_is_null (tmp))
 		{
 				gtk_list_store_append (store, &iter);
-				gtk_list_store_set (store, &iter, NUMBER, i + 1, KANJI, tmp->str, KANJI_STROKE, tmp->stroke, RADICAL, tmp->radical, RADICAL_STROKE, 0, ON, tmp->on,
-								KUN, tmp->kun, MEANING, tmp->meaning, JLPT_LEVEL, tmp->jlpt_level, SCHOOL_GRADE, tmp->grade, -1);
+				gtk_list_store_set (store, &iter, NUMBER, i + 1, KANJI, tmp->str, KANJI_STROKE, tmp->stroke, RADICAL, tmp->radical, 
+								RADICAL_STROKE, tmp->radical_stroke, ON, tmp->on, KUN, tmp->kun, MEANING, tmp->meaning, JLPT_LEVEL, tmp->jlpt_level, 
+								SCHOOL_GRADE, tmp->grade, -1);
 
 				tmp = &g_array_index (arr, Kanji, ++i);
 		}
