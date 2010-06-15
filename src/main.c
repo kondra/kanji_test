@@ -2,13 +2,16 @@
 
 #include "kanji.h"
 #include "add_kanji.h"
+#include "view_kanji.h"
 
-static void button_clicked (GtkButton*, GtkWindow*);
+static void button1_clicked (GtkButton*, GtkWindow*);
+static void button2_clicked (GtkButton*, GtkWindow*);
 static void destroy (GtkWidget*, gpointer);
 
 int main (int argc, char *argv[])
 {
-		GtkWidget *window, *button;
+		GtkWidget *window, *button1, *button2;
+		GtkWidget *vbox;
 
 		gtk_init (&argc, &argv);
 
@@ -18,18 +21,25 @@ int main (int argc, char *argv[])
 
 		g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), NULL);
 
-		button = gtk_button_new_with_mnemonic ("_Add Kanji");
+		button1 = gtk_button_new_with_mnemonic ("_Add Kanji");
+		button2 = gtk_button_new_with_mnemonic ("_View Kanji List");
 
-		g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (button_clicked), (gpointer) window);
+		g_signal_connect (G_OBJECT (button1), "clicked", G_CALLBACK (button1_clicked), (gpointer) window);
+		g_signal_connect (G_OBJECT (button2), "clicked", G_CALLBACK (button2_clicked), (gpointer) window);
 
-		gtk_container_add (GTK_CONTAINER (window), button);
+		vbox = gtk_vbox_new (FALSE, 5);
+
+		gtk_box_pack_start_defaults (GTK_BOX (vbox), button1);
+		gtk_box_pack_start_defaults (GTK_BOX (vbox), button2);
+
+		gtk_container_add (GTK_CONTAINER (window), vbox);
 		gtk_widget_show_all (window);
 		
 		gtk_main ();
 		return 0;
 }
 
-static void button_clicked (GtkButton *button, GtkWindow *parent)
+static void button1_clicked (GtkButton *button, GtkWindow *parent)
 {
 		Kanji *tmp = create_dialog ();
 
@@ -52,6 +62,16 @@ static void button_clicked (GtkButton *button, GtkWindow *parent)
 		kanji_array_free (arr);
 }
 
+static void button2_clicked (GtkButton *button, GtkWindow *parent)
+{
+		GArray *arr = kanji_array_load ("output");
+		if (arr == NULL)
+				return;
+
+		view_kanji (arr);
+
+		kanji_array_free (arr);
+}
 static void destroy (GtkWidget *window, gpointer data)
 {
 		gtk_main_quit ();

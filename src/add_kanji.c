@@ -138,11 +138,16 @@ Kanji* create_dialog (void)
 				gint jlpt_lvl = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
 				gint grade = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
 
-				gtk_widget_destroy (w->dialog);
+		//		gtk_widget_destroy (w->dialog);
 		//		g_list_free (focus_chain);
+//				g_slice_free (Widgets, w);
+
+				Kanji *tmp = kanji_create (kanji_str, radical_str, kun_str, on_str, trans_str, jlpt_lvl, grade, stroke_cnt);
+
+				gtk_widget_destroy (w->dialog);
 				g_slice_free (Widgets, w);
 
-				return kanji_create (kanji_str, radical_str, kun_str, on_str, trans_str, jlpt_lvl, grade, stroke_cnt);
+				return tmp;
 		}
 		
 		gtk_widget_destroy (w->dialog);

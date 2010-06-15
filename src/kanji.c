@@ -6,7 +6,7 @@
 
 #include "kanji.h"
 
-static gboolean kanji_is_null (Kanji *k)
+gboolean kanji_is_null (Kanji *k)
 {
 		if (k->jlpt_level || k->grade || k->stroke || k->str != NULL || k->kun != NULL || k->on != NULL || k->trans != NULL || k->radical != NULL)
 				return FALSE;
