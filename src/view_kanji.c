@@ -21,7 +21,8 @@ void view_kanji (GArray *arr)
 		treeview = gtk_tree_view_new ();
 		setup_tree_view (treeview);
 
-		store = gtk_list_store_new (COLUMNS, G_TYPE_INT, G_TYPE_STRING, G_TYPE_INT, G_TYPE_STRING, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT);
+		store = gtk_list_store_new (COLUMNS, G_TYPE_INT, G_TYPE_STRING, G_TYPE_INT, G_TYPE_STRING, G_TYPE_INT, 
+						G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT);
 
 		tmp = &g_array_index (arr, Kanji, i = 0);
 		while (tmp == NULL || !kanji_is_null (tmp))
@@ -68,9 +69,9 @@ static void setup_tree_view (GtkWidget *treeview)
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Kanji", renderer, "text", KANJI, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
-		gtk_tree_view_column_set_reorderable (column, TRUE);
-		gtk_tree_view_column_set_sort_indicator (column, TRUE);
-		gtk_tree_view_column_set_sort_column_id (column, KANJI);
+//		gtk_tree_view_column_set_reorderable (column, TRUE);
+//		gtk_tree_view_column_set_sort_indicator (column, TRUE);
+//		gtk_tree_view_column_set_sort_column_id (column, KANJI);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 		
 		renderer = gtk_cell_renderer_text_new ();
@@ -84,9 +85,9 @@ static void setup_tree_view (GtkWidget *treeview)
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Radical", renderer, "text", RADICAL, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
-		gtk_tree_view_column_set_reorderable (column, TRUE);
-		gtk_tree_view_column_set_sort_indicator (column, TRUE);
-		gtk_tree_view_column_set_sort_column_id (column, RADICAL);
+//		gtk_tree_view_column_set_reorderable (column, TRUE);
+//		gtk_tree_view_column_set_sort_indicator (column, TRUE);
+//		gtk_tree_view_column_set_sort_column_id (column, RADICAL);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 		
 		renderer = gtk_cell_renderer_text_new ();
