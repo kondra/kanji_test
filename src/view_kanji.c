@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <string.h>
 
 #include "kanji.h"
 #include "view_kanji.h"
@@ -65,6 +66,18 @@ void view_kanji (GArray *arr)
 		gtk_widget_destroy (dialog);
 }
 
+//change ',' to '\n'
+static gchar* simple_coma_parser (gchar *str)
+{
+		int i;
+
+		for (i = 0; i < strlen (str); i++)
+				if (str[i] == ',')
+						str[i] = '\n';
+
+		return str;
+}
+
 static void view_kanji_flash_card (Kanji *kanji)
 {
 		GtkWidget *dialog;
@@ -78,18 +91,17 @@ static void view_kanji_flash_card (Kanji *kanji)
 		gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
 
 		kanji_label = gtk_label_new (NULL);
-		gtk_label_set_selectable (GTK_LABEL (kanji_label), TRUE);
-		gtk_label_set_markup (GTK_LABEL (kanji_label), g_strconcat ("<span font_desc='72'>", kanji->str, "</span>", NULL));
+		gtk_label_set_markup (GTK_LABEL (kanji_label), g_strconcat ("<span font_desc='76'>", kanji->str, "</span>", NULL));
 
 		on_label = gtk_label_new (NULL);
 		gtk_label_set_selectable (GTK_LABEL (on_label), TRUE);
-		gtk_label_set_markup (GTK_LABEL (on_label), g_strconcat ("<span font_desc='20'>", kanji->on, "</span>", NULL));
+		gtk_label_set_markup (GTK_LABEL (on_label), g_strconcat ("<span font_desc='14'>", simple_coma_parser (kanji->on), "</span>", NULL));
 		
 		kun_label = gtk_label_new (NULL);
 		gtk_label_set_selectable (GTK_LABEL (kun_label), TRUE);
-		gtk_label_set_markup (GTK_LABEL (kun_label), g_strconcat ("<span font_desc='20'>", kanji->kun, "</span>", NULL));
+		gtk_label_set_markup (GTK_LABEL (kun_label), g_strconcat ("<span font_desc='14'>", simple_coma_parser (kanji->kun), "</span>", NULL));
 	
-		meaning_label = gtk_label_new (kanji->meaning);
+		meaning_label = gtk_label_new (simple_coma_parser (kanji->meaning));
 
 		jlpt_label = gtk_label_new (g_strdup_printf ("%d", kanji->jlpt_level));
 		
