@@ -117,7 +117,7 @@ static void view_kanji_flash_card (Kanji *kanji)
 		kun_lbl = gtk_label_new ("Kun:");
 		meaning_lbl = gtk_label_new ("Meaning:");
 		radical_lbl = gtk_label_new ("Radical:");
-		descr_lbl = gtk_label_new ("Kanji Stroke/Radical Stroke:");
+		descr_lbl = gtk_label_new ("Kanji-Radical Stroke:");
 		jlpt_lbl = gtk_label_new ("JLPT Level:");
 		grade_lbl = gtk_label_new ("School Grade:");
 
@@ -125,8 +125,7 @@ static void view_kanji_flash_card (Kanji *kanji)
 
 		table1 = gtk_table_new (7, 2, FALSE);
 
-		//gtk_table_attach (GTK_TABLE (table1), num_label, 0, 1, 0, 1, GTK_EXPAND, GTK_SHRINK, 0, 0);
-
+		gtk_table_attach (GTK_TABLE (table1), radical_lbl, 0, 1, 0, 1, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach (GTK_TABLE (table1), descr_lbl, 0, 1, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach (GTK_TABLE (table1), on_lbl, 0, 1, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach (GTK_TABLE (table1), kun_lbl, 0, 1, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
@@ -135,6 +134,7 @@ static void view_kanji_flash_card (Kanji *kanji)
 		gtk_table_attach (GTK_TABLE (table1), grade_lbl, 0, 1, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
 //		gtk_table_attach (GTK_TABLE (table1), _lbl, 0, 1, 7, 8, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
+		gtk_table_attach (GTK_TABLE (table1), radical_label, 1, 2, 0, 1, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach (GTK_TABLE (table1), stroke_label, 1, 2, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach (GTK_TABLE (table1), on_label, 1, 2, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach (GTK_TABLE (table1), kun_label, 1, 2, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
@@ -147,6 +147,8 @@ static void view_kanji_flash_card (Kanji *kanji)
 		gtk_table_set_col_spacings (GTK_TABLE (table1), 5);
 		
 		gtk_box_pack_start_defaults (GTK_BOX (GTK_DIALOG (dialog)->vbox), table1);
+
+		gtk_dialog_set_has_separator (GTK_DIALOG (dialog), FALSE);
 		
 		gtk_widget_show_all (dialog);
 		result = gtk_dialog_run (GTK_DIALOG (dialog));
