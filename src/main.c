@@ -72,6 +72,7 @@ static void button2_clicked (GtkButton *button, GtkWindow *parent)
 
 		kanji_array_free (arr);
 }
+
 static void destroy (GtkWidget *window, gpointer data)
 {
 		gtk_main_quit ();
