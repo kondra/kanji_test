@@ -30,7 +30,7 @@ Kanji* create_dialog (void)
 //		GList *focus_chain = NULL;//temp solution
 		Widgets *w;
 
-		w = g_slice_new (Widgets);
+		w = (Widgets*) g_malloc (sizeof (Widgets));
 
 		w->dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
 
@@ -149,18 +149,22 @@ Kanji* create_dialog (void)
 		//		gtk_widget_destroy (w->dialog);
 		//		g_list_free (focus_chain);
 //				g_slice_free (Widgets, w);
+//			
 
 				Kanji *tmp = kanji_create (kanji_str, radical_str, kun_str, on_str, meaning_str, jlpt_lvl, grade, stroke_cnt, rst_cnt);
+				g_debug ("11");
 
 				gtk_widget_destroy (w->dialog);
-				g_slice_free (Widgets, w);
+				g_debug ("12");
+				g_free (w);
+				g_debug ("13");
 
 				return tmp;
 		}
 		
 		gtk_widget_destroy (w->dialog);
 //		g_list_free (focus_chain);
-		g_slice_free (Widgets, w);
+		g_free (w);
 
 		return NULL;
 }

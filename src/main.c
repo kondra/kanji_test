@@ -1,18 +1,20 @@
 #include <gtk/gtk.h>
+#include <stdlib.h>
 
 #include "kanji.h"
 #include "add_kanji.h"
 #include "view_kanji.h"
 
-static void button1_clicked (GtkButton*, GtkWindow*);
-static void button2_clicked (GtkButton*, GtkWindow*);
+static void button1_clicked (GtkButton*, GArray*);
+static void button2_clicked (GtkButton*, GArray*);
 static void destroy (GtkWidget*, gpointer);
 
 int main (int argc, char *argv[])
 {
 		GtkWidget *window, *button1, *button2;
 		GtkWidget *vbox;
-
+		GArray *arr;
+		
 		gtk_init (&argc, &argv);
 
 		window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -24,8 +26,8 @@ int main (int argc, char *argv[])
 		button1 = gtk_button_new_with_mnemonic ("_Add Kanji");
 		button2 = gtk_button_new_with_mnemonic ("_View Kanji List");
 
-		g_signal_connect (G_OBJECT (button1), "clicked", G_CALLBACK (button1_clicked), (gpointer) window);
-		g_signal_connect (G_OBJECT (button2), "clicked", G_CALLBACK (button2_clicked), (gpointer) window);
+		g_signal_connect (G_OBJECT (button1), "clicked", G_CALLBACK (button1_clicked), (gpointer) arr);
+		g_signal_connect (G_OBJECT (button2), "clicked", G_CALLBACK (button2_clicked), (gpointer) arr);
 
 		vbox = gtk_vbox_new (FALSE, 5);
 
@@ -34,43 +36,31 @@ int main (int argc, char *argv[])
 
 		gtk_container_add (GTK_CONTAINER (window), vbox);
 		gtk_widget_show_all (window);
-		
+
+		arr = kanji_array_load ("output");
+		if (arr == NULL)
+				arr = kanji_array_create;
+
 		gtk_main ();
 		return 0;
 }
 
-static void button1_clicked (GtkButton *button, GtkWindow *parent)
+static void button1_clicked (GtkButton *button, GArray *arr)
 {
 		Kanji *tmp = create_dialog ();
 
 		if (tmp == NULL)
 				return;
 
-		GArray *arr = kanji_array_load ("output");
-		if (arr == NULL)
-		{
-				arr = kanji_array_create;
-				arr = kanji_array_append (arr, tmp);
-				kanji_array_save ("output", arr);
-		}
-		else
-		{
-				arr = kanji_array_append (arr, tmp);
-				kanji_array_save ("output", arr);
-		}
-
-		kanji_array_free (arr);
+//		kanji_array_append (arr, tmp);
 }
 
-static void button2_clicked (GtkButton *button, GtkWindow *parent)
+static void button2_clicked (GtkButton *button, GArray *arr)
 {
-		GArray *arr = kanji_array_load ("output");
 		if (arr == NULL)
 				return;
 
 		view_kanji (arr);
-
-		kanji_array_free (arr);
 }
 
 static void destroy (GtkWidget *window, gpointer data)
