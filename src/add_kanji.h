@@ -9,6 +9,6 @@ typedef struct
 		GtkWidget *kanji_entry, *on_entry, *kun_entry, *meaning_entry, *radical_entry, *jlpt_spin, *grade_spin, *stroke_spin, *rst_spin;
 } Widgets;
 
-Kanji* create_dialog (void);
+Kanji* create_dialog (Kanji*, gboolean);
 
 #endif
