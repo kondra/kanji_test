@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
 		GtkWidget *vbox;
 		GArray *arr;
 		
-		arr = kanji_array_load ("output");
+		arr = kanji_array_load ("kanjidict");
 		if (arr == NULL)
 				arr = kanji_array_create;
 
@@ -69,7 +69,7 @@ static void button2_clicked (GtkButton *button, GArray *arr)
 static void destroy (GtkWidget *window, GArray *arr)
 {
 		if (arr != NULL)
-				kanji_array_save ("output", arr);
+				kanji_array_save ("kanjidict", arr);
 
 		gtk_main_quit ();
 }
