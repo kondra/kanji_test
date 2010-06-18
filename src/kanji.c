@@ -113,7 +113,6 @@ GArray* kanji_array_load (const gchar *filename)
 						break;
 				}
 				pos += len + 1;
-				g_debug ("2");
 
 				len = strlen (buf + pos);
 				k->on = g_strdup_printf ("%s", buf + pos);
@@ -125,7 +124,6 @@ GArray* kanji_array_load (const gchar *filename)
 						break;
 				}
 				pos += len + 1;
-				g_debug ("3");
 
 				len = strlen (buf + pos);
 				k->meaning = g_strdup_printf ("%s", buf + pos);
@@ -137,7 +135,6 @@ GArray* kanji_array_load (const gchar *filename)
 						break;
 				}
 				pos += len + 1;
-				g_debug ("4");
 				
 				len = strlen (buf + pos);
 				k->radical = g_strdup_printf ("%s", buf + pos);
@@ -149,12 +146,10 @@ GArray* kanji_array_load (const gchar *filename)
 						break;
 				}
 				pos += len + 1;
-				g_debug ("5");
 
 				fseek (f, curpos + pos, SEEK_SET);
 				
 				arr = kanji_array_append (arr, k);
-				g_debug ("6");
 		}
 
 		g_free (buf);
