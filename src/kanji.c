@@ -23,26 +23,17 @@ Kanji* kanji_create_empty (void)
 Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, const gchar *on, const gchar *meaning, 
 				int jlpt_level, int grade, int stroke, int radical_stroke)
 {
-		guint len;
-
 		Kanji *k = (Kanji*) g_malloc0 (sizeof (Kanji));
 
-		k->str = (gchar*) g_malloc0 (sizeof (gchar) * strlen (str));
-		strcpy (k->str, str);
+		k->str = g_strdup_printf ("%s", str);
 		
-		k->radical = (gchar*) g_malloc0 (sizeof (gchar) * strlen (radical));
-		strcpy (k->radical, radical);
+		k->radical = g_strdup_printf ("%s", radical);
 		
-		len = sizeof (gchar) * strlen (kun);
-		k->kun = (gchar*) g_malloc0 (len == 0 ? 1 : len);
-		strcpy (k->kun, kun);
+		k->kun = g_strdup_printf ("%s", kun);
 		
-		len = sizeof (gchar) * strlen (on);
-		k->on = (gchar*) g_malloc0 (len == 0 ? 1 : len);
-		strcpy (k->on, on);
+		k->on = g_strdup_printf ("%s", on);
 		
-		k->meaning = (gchar*) g_malloc0 (sizeof (gchar) * strlen (meaning));
-		strcpy (k->meaning, meaning);
+		k->meaning = g_strdup_printf ("%s", meaning);
 
 		k->jlpt_level = jlpt_level;
 		k->grade = grade;
@@ -55,13 +46,13 @@ Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *kun, c
 //TODO: write a macro
 GArray* kanji_array_append (GArray *arr, Kanji *k)
 {
-		return g_array_append_val (arr, *k);
+		return g_array_append_vals (arr, k, 1);
 }
 
 GArray* kanji_array_load (const gchar *filename)
 {
 		FILE *f;
-		GArray *arr = g_array_new (TRUE, TRUE, sizeof (Kanji));
+		GArray *arr = kanji_array_create;
 		gchar b, *buf;
 		int pos, len, curpos;
 		struct stat statbuf;
@@ -102,8 +93,7 @@ GArray* kanji_array_load (const gchar *filename)
 				fread (buf, sizeof (gchar), 1000, f);
 
 				len = strlen (buf);
-				k->str = g_malloc0 (len * sizeof (gchar));
-				strcpy (k->str, buf);
+				k->str = g_strdup_printf ("%s", buf);
 				if (k->str == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
@@ -114,8 +104,7 @@ GArray* kanji_array_load (const gchar *filename)
 				pos = len + 1;
 
 				len = strlen (buf + pos);
-				k->kun = g_malloc0 (len * sizeof (gchar));
-				strcpy (k->kun, buf + pos);
+				k->kun = g_strdup_printf ("%s", buf + pos);
 				if (k->kun == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
@@ -124,10 +113,10 @@ GArray* kanji_array_load (const gchar *filename)
 						break;
 				}
 				pos += len + 1;
+				g_debug ("2");
 
 				len = strlen (buf + pos);
-				k->on = g_malloc0 (len * sizeof (gchar));
-				strcpy (k->on, buf + pos);
+				k->on = g_strdup_printf ("%s", buf + pos);
 				if (k->on == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
@@ -136,10 +125,10 @@ GArray* kanji_array_load (const gchar *filename)
 						break;
 				}
 				pos += len + 1;
+				g_debug ("3");
 
 				len = strlen (buf + pos);
-				k->meaning = g_malloc0 (len * sizeof (gchar));
-				strcpy (k->meaning, buf +pos);
+				k->meaning = g_strdup_printf ("%s", buf + pos);
 				if (k->meaning == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
@@ -148,10 +137,10 @@ GArray* kanji_array_load (const gchar *filename)
 						break;
 				}
 				pos += len + 1;
+				g_debug ("4");
 				
 				len = strlen (buf + pos);
-				k->radical = g_malloc0 (len * sizeof (gchar));
-				strcpy (k->radical, buf + pos);
+				k->radical = g_strdup_printf ("%s", buf + pos);
 				if (k->radical == NULL)
 				{
 						g_warning ("error parsing file %s", filename);
@@ -160,10 +149,12 @@ GArray* kanji_array_load (const gchar *filename)
 						break;
 				}
 				pos += len + 1;
+				g_debug ("5");
 
 				fseek (f, curpos + pos, SEEK_SET);
 				
-				arr = g_array_append_val (arr, *k);
+				arr = kanji_array_append (arr, k);
+				g_debug ("6");
 		}
 
 		g_free (buf);
