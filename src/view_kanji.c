@@ -12,7 +12,7 @@ typedef struct
 } Pair;
 
 static void setup_tree_view (GtkWidget*);
-static void view_kanji_flash_card (Kanji*);
+//static void view_kanji_flash_card (Kanji*);
 static void row_activated (GtkTreeView*, GtkTreePath*, GtkTreeViewColumn*, GArray*);
 static void row_add (GtkButton*, Pair*);
 static void row_remove (GtkButton*, Pair*);
@@ -171,7 +171,7 @@ static void row_remove (GtkButton *button, Pair *p)
 
 		gtk_list_store_remove (GTK_LIST_STORE (model), &it);
 }
-
+/*
 //change ',' to '\n'
 static gchar* simple_coma_parser (gchar *str, gboolean mode)
 {
@@ -193,7 +193,50 @@ static gchar* simple_coma_parser (gchar *str, gboolean mode)
 
 		return str;
 }
+*/
+static void view_kanji_article (Kanji *kanji)
+{
+		GtkWidget *dialog, *scrolled, *textview;
+		GtkTextBuffer *buffer;
+		GtkTextIter start;//, end;
+		gchar *buf;
 
+		dialog = gtk_dialog_new_with_buttons ("Kanji Flash Card", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+		gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
+		gtk_dialog_set_has_separator (GTK_DIALOG (dialog), FALSE);
+		gtk_widget_set_size_request (GTK_WIDGET (dialog), 400, 600);
+
+		textview = gtk_text_view_new ();
+		gtk_text_view_set_editable (GTK_TEXT_VIEW (textview), FALSE);
+		gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (textview), FALSE);
+		buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
+
+		gtk_text_buffer_create_tag (buffer, "kanji_font", "font", "46", NULL);
+		gtk_text_buffer_create_tag (buffer, "on_font", "font", "20", NULL);
+		gtk_text_buffer_create_tag (buffer, "on_color", "foreground", "#443FD1", NULL);
+
+		gtk_text_buffer_get_start_iter (buffer, &start);
+		gtk_text_buffer_insert_with_tags_by_name (buffer, &start, kanji->str, -1, "kanji_font", NULL);
+
+		gtk_text_buffer_get_end_iter (buffer, &start);
+		buf = g_strdup_printf (" %d\n", kanji->stroke);
+		gtk_text_buffer_insert (buffer, &start, buf, -1);
+		g_free (buf);
+
+		gtk_text_buffer_get_end_iter (buffer, &start);
+		buf = g_strdup_printf ("    %s\n", kanji->on);
+		gtk_text_buffer_insert_with_tags_by_name (buffer, &start, buf, -1, "on_font", "on_color", NULL);
+
+		scrolled = gtk_scrolled_window_new (NULL, NULL);
+		gtk_container_add (GTK_CONTAINER (scrolled), textview);
+
+		gtk_box_pack_start_defaults (GTK_BOX (GTK_DIALOG (dialog)->vbox), scrolled);
+		
+		gtk_widget_show_all (dialog);
+		gtk_dialog_run (GTK_DIALOG (dialog));
+		gtk_widget_destroy (dialog);
+}
+/*
 static void view_kanji_flash_card (Kanji *kanji)
 {
 		GtkWidget *dialog;
@@ -275,7 +318,7 @@ static void view_kanji_flash_card (Kanji *kanji)
 		simple_coma_parser (kanji->meaning, FALSE);
 		simple_coma_parser (kanji->kun, FALSE);
 }
-
+*/
 static void row_activated (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *column, GArray *arr)
 {
 		GtkTreeModel *model;
@@ -291,7 +334,8 @@ static void row_activated (GtkTreeView *treeview, GtkTreePath *path, GtkTreeView
 				gtk_tree_model_get (model, &iter, NUMBER, &i, -1);
 				tmp = &g_array_index (arr, Kanji, i - 1);
 
-				view_kanji_flash_card (tmp);
+//				view_kanji_flash_card (tmp);
+				view_kanji_article (tmp);
 		}
 }
 
