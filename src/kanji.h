@@ -8,7 +8,7 @@ typedef struct
 		gchar *str, *kun, *on, *meaning, *radical;
 } Kanji;
 
-#define kanji_array_create g_array_new (TRUE, TRUE, sizeof (Kanji))
+#define kanji_array_create g_array_sized_new (TRUE, TRUE, sizeof (Kanji), 100)
 
 gboolean kanji_is_null (Kanji *k);
 
