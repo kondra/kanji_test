@@ -31,7 +31,7 @@ Kanji* create_dialog (void)
 //		GList *focus_chain = NULL;//temp solution
 		Widgets w;
 
-		w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
+		w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_ADD, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
 
 		gtk_container_set_border_width (GTK_CONTAINER (w.dialog), 5);
 		
