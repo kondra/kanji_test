@@ -173,13 +173,23 @@ static void row_remove (GtkButton *button, Pair *p)
 }
 
 //change ',' to '\n'
-static gchar* simple_coma_parser (gchar *str)
+static gchar* simple_coma_parser (gchar *str, gboolean mode)
 {
 		int i;
 
-		for (i = 0; i < strlen (str); i++)
-				if (str[i] == ',')
-						str[i] = '\n';
+		if (mode == TRUE)
+		{
+				for (i = 0; i < strlen (str); i++)
+						if (str[i] == ',')
+								str[i] = '\n';
+		}
+
+		if (mode == FALSE)
+		{
+				for (i = 0; i < strlen (str); i++)
+						if (str[i] == '\n')
+								str[i] = ',';
+		}
 
 		return str;
 }
@@ -201,13 +211,13 @@ static void view_kanji_flash_card (Kanji *kanji)
 
 		on_label = gtk_label_new (NULL);
 		gtk_label_set_selectable (GTK_LABEL (on_label), TRUE);
-		gtk_label_set_markup (GTK_LABEL (on_label), g_strconcat ("<span font_desc='14'>", simple_coma_parser (kanji->on), "</span>", NULL));
+		gtk_label_set_markup (GTK_LABEL (on_label), g_strconcat ("<span font_desc='14'>", simple_coma_parser (kanji->on, TRUE), "</span>", NULL));
 		
 		kun_label = gtk_label_new (NULL);
 		gtk_label_set_selectable (GTK_LABEL (kun_label), TRUE);
-		gtk_label_set_markup (GTK_LABEL (kun_label), g_strconcat ("<span font_desc='14'>", simple_coma_parser (kanji->kun), "</span>", NULL));
+		gtk_label_set_markup (GTK_LABEL (kun_label), g_strconcat ("<span font_desc='14'>", simple_coma_parser (kanji->kun, TRUE), "</span>", NULL));
 	
-		meaning_label = gtk_label_new (simple_coma_parser (kanji->meaning));
+		meaning_label = gtk_label_new (simple_coma_parser (kanji->meaning, TRUE));
 
 		jlpt_label = gtk_label_new (g_strdup_printf ("%d", kanji->jlpt_level));
 		
@@ -260,6 +270,10 @@ static void view_kanji_flash_card (Kanji *kanji)
 		result = gtk_dialog_run (GTK_DIALOG (dialog));
 
 		gtk_widget_destroy (dialog);
+		
+		simple_coma_parser (kanji->on, FALSE);
+		simple_coma_parser (kanji->meaning, FALSE);
+		simple_coma_parser (kanji->kun, FALSE);
 }
 
 static void row_activated (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *column, GArray *arr)
