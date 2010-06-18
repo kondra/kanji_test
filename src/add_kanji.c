@@ -24,14 +24,17 @@ static void upd_entry (GtkWidget *cw, Widgets *w)
 				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, FALSE);
 }
 
-Kanji* create_dialog (void)
+Kanji* create_dialog (Kanji *old, gboolean mod)
 {
 		gint result;
 //		PangoFontDescription *font_desc;
 //		GList *focus_chain = NULL;//temp solution
 		Widgets w;
 
-		w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_ADD, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
+		if (mod == FALSE)
+				w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_ADD, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
+		else
+				w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
 
 		gtk_container_set_border_width (GTK_CONTAINER (w.dialog), 5);
 		
@@ -119,6 +122,23 @@ Kanji* create_dialog (void)
 		
 		gtk_dialog_set_response_sensitive (GTK_DIALOG (w.dialog), GTK_RESPONSE_OK, FALSE);
 		gtk_dialog_set_has_separator (GTK_DIALOG (w.dialog), FALSE);
+
+		if (mod == TRUE)
+		{
+				if (old == NULL)
+						g_error ("add kanji: old kanji null pointer");
+
+				gtk_entry_set_text (GTK_ENTRY (w.kanji_entry), old->str);
+				gtk_entry_set_text (GTK_ENTRY (w.on_entry), old->on);
+				gtk_entry_set_text (GTK_ENTRY (w.kun_entry), old->kun);
+				gtk_entry_set_text (GTK_ENTRY (w.meaning_entry), old->meaning);
+				gtk_entry_set_text (GTK_ENTRY (w.radical_entry), old->radical);
+
+				gtk_spin_button_set_value (GTK_SPIN_BUTTON (w.stroke_spin), old->stroke);
+				gtk_spin_button_set_value (GTK_SPIN_BUTTON (w.rst_spin), old->radical_stroke);
+				gtk_spin_button_set_value (GTK_SPIN_BUTTON (w.grade_spin), old->grade);
+				gtk_spin_button_set_value (GTK_SPIN_BUTTON (w.jlpt_spin), old->jlpt_level);
+		}
 
 		gtk_widget_show_all (w.dialog);
 		result = gtk_dialog_run (GTK_DIALOG (w.dialog));
