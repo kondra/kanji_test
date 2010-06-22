@@ -11,6 +11,18 @@ typedef struct
 		GtkWidget *tview;
 } Pair;
 
+enum
+{
+		NUMBER = 0,
+		KANJI,
+		KANJI_STROKE,
+		RADICAL,
+		RADICAL_STROKE,
+		JLPT_LEVEL,
+		SCHOOL_GRADE,
+		COLUMNS
+};
+
 static void setup_tree_view (GtkWidget*);
 //static void view_kanji_flash_card (Kanji*);
 static void row_activated (GtkTreeView*, GtkTreePath*, GtkTreeViewColumn*, GArray*);
@@ -40,7 +52,8 @@ void view_kanji (GArray *arr)
 		store = gtk_list_store_new (COLUMNS, G_TYPE_INT, G_TYPE_STRING, G_TYPE_INT, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 
 		tmp = &g_array_index (arr, Kanji, i = 0);
-		while (tmp == NULL || !kanji_is_null (tmp))
+//		while (tmp == NULL || !kanji_is_null (tmp))
+		while (i < arr->len)
 		{
 				gtk_list_store_append (store, &iter);
 				gtk_list_store_set (store, &iter, NUMBER, i + 1, KANJI, tmp->str, KANJI_STROKE, tmp->stroke, RADICAL, tmp->radical, 
@@ -113,7 +126,7 @@ static void row_edit (GtkButton *button, Pair *p)
 
 		Kanji old = g_array_index (p->arr, Kanji, i - 1);
 
-		Kanji *tmp = create_dialog (&old, TRUE);
+		Kanji *tmp = kanji_edit_dialog (&old);// create_dialog (&old, TRUE);
 		if (tmp == NULL)
 				return;
 
@@ -125,7 +138,7 @@ static void row_edit (GtkButton *button, Pair *p)
 
 static void row_add (GtkButton *button, Pair *p)
 {
-		Kanji *tmp = create_dialog (NULL, FALSE);
+		Kanji *tmp = kanji_add_dialog (); //create_dialog (NULL, FALSE);
 
 		if (tmp == NULL)
 				return;
