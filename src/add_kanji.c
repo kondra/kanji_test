@@ -75,6 +75,11 @@ static void row_add (GtkMenuItem *item, GtkTreeView *treeview)
 		GtkTreeIter iter;
 
 		gtk_list_store_append (GTK_LIST_STORE (model), &iter);
+
+		GtkTreePath *path = gtk_tree_model_get_path (model, &iter);
+		GtkTreeViewColumn *column = gtk_tree_view_get_column (treeview, KUN_WRITING);
+
+		gtk_tree_view_set_cursor_on_cell (treeview, path, column, NULL, TRUE);
 }
 
 static void row_remove (GtkMenuItem *item, GtkTreeView *treeview)
@@ -123,6 +128,8 @@ static void setup_tree_view (GtkTreeView *treeview)
 		g_signal_connect (G_OBJECT (renderer), "edited", G_CALLBACK (cell_edited), (gpointer) treeview);
 
 		column = gtk_tree_view_column_new_with_attributes ("Writing", renderer, "text", KUN_WRITING, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, KUN_WRITING);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 
 		renderer = gtk_cell_renderer_text_new ();
@@ -132,6 +139,8 @@ static void setup_tree_view (GtkTreeView *treeview)
 		g_signal_connect (G_OBJECT (renderer), "edited", G_CALLBACK (cell_edited), (gpointer) treeview);
 
 		column = gtk_tree_view_column_new_with_attributes ("Reading", renderer, "text", KUN_READING, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, KUN_READING);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 	
 		renderer = gtk_cell_renderer_text_new ();
@@ -141,6 +150,8 @@ static void setup_tree_view (GtkTreeView *treeview)
 		g_signal_connect (G_OBJECT (renderer), "edited", G_CALLBACK (cell_edited), (gpointer) treeview);
 
 		column = gtk_tree_view_column_new_with_attributes ("Meaning", renderer, "text", KUN_MEANING, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_sort_column_id (column, KUN_MEANING);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 }
 
@@ -239,6 +250,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 //				gtk_list_store_append (store, &iter);
 
 		gtk_tree_view_set_model (GTK_TREE_VIEW (treeview), GTK_TREE_MODEL (store));
+		gtk_tree_view_set_enable_search (GTK_TREE_VIEW (treeview), FALSE);
 		g_object_unref (store);
 
 		//g_signal_connect (G_OBJECT (treeview), "row-activated", G_CALLBACK (row_activated), (gpointer)arr);
