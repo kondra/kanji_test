@@ -92,7 +92,7 @@ void view_kanji (GArray *arr)
 		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), scrolled_win, TRUE, TRUE, 5);
 		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, FALSE, FALSE, 5);
 
-	//	gtk_tree_view_set_enable_search (GTK_TREE_VIEW (treeview), TRUE);
+		gtk_tree_view_set_enable_search (GTK_TREE_VIEW (treeview), FALSE);
 	//	gtk_tree_view_set_search_column (GTK_TREE_VIEW (treeview), ON);
 	//	entry = gtk_entry_new ();
 	//	gtk_tree_view_set_search_entry (GTK_TREE_VIEW (treeview), GTK_ENTRY (entry));
