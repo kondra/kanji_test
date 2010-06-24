@@ -100,17 +100,17 @@ static void row_remove (GtkMenuItem *item, GtkTreeView *treeview)
 static void upd_entry (GtkWidget *cw, Widgets *w)
 {
 		gint val1, val2;
-		guint16 l1, l2, l3, l4;
+		guint16 l1, l2, l3;
 
 		l1 = gtk_entry_get_text_length (GTK_ENTRY (w->kanji_entry));
 		l2 = gtk_entry_get_text_length (GTK_ENTRY (w->radical_entry));
 		l3 = gtk_entry_get_text_length (GTK_ENTRY (w->on_entry));
-		l4 = gtk_entry_get_text_length (GTK_ENTRY (w->meaning_entry));
+//		l4 = gtk_entry_get_text_length (GTK_ENTRY (w->meaning_entry));
 
 		val1 = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->stroke_spin));
 		val2 = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w->rst_spin));
 
-		if (val1 && val2 && l1 && l2 && l4)
+		if (val1 && val2 && l1 && l2)
 				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, TRUE);
 		else
 				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, FALSE);
@@ -172,9 +172,10 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		GtkWidget *treeview, *scrolled_win;
 		GtkListStore *store;
 		GtkTreeIter iter;
+		//GtkAccelGroup *group;
 		gint result;
 		GtkWidget *table1, *table2, *lbl, *expander;
-		GtkWidget *kanji_label, *on_label, *kun_label, *meaning_label, *jlpt_label, *grade_label, *radical_label, *stroke_label, *rst_label;
+		GtkWidget *kanji_label, *on_label, *kun_label, *jlpt_label, *grade_label, *radical_label, *stroke_label, *rst_label;
 //		PangoFontDescription *font_desc;
 //		GList *focus_chain = NULL;//temp solution
 		Widgets w;
@@ -193,8 +194,8 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 
 		kanji_label = gtk_label_new ("Kanji:");
 		on_label = gtk_label_new ("ON reading:");
-		kun_label = gtk_label_new ("KUN:");
-		meaning_label = gtk_label_new ("Principal Meaning:");
+		kun_label = gtk_label_new ("Usage:");
+		//meaning_label = gtk_label_new ("Principal Meaning:");
 		jlpt_label = gtk_label_new ("JLPT Level:");
 		grade_label = gtk_label_new ("School Grade:");
 		radical_label = gtk_label_new ("Kanji Radical:");
@@ -204,7 +205,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		w.kanji_entry = gtk_entry_new ();
 		w.on_entry = gtk_entry_new ();
 //		w.kun_entry = gtk_entry_new ();
-		w.meaning_entry = gtk_entry_new ();
+//		w.meaning_entry = gtk_entry_new ();
 		w.radical_entry = gtk_entry_new ();
 
 //		font_desc = pango_font_description_new ();
@@ -215,7 +216,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		g_signal_connect (G_OBJECT (w.kanji_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
 		g_signal_connect (G_OBJECT (w.on_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
 //		g_signal_connect (G_OBJECT (w.kun_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
-		g_signal_connect (G_OBJECT (w.meaning_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
+//		g_signal_connect (G_OBJECT (w.meaning_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
 		g_signal_connect (G_OBJECT (w.radical_entry), "changed", G_CALLBACK (upd_entry), (gpointer) &w);
 
 		w.jlpt_spin = gtk_spin_button_new_with_range (0.0, 5.0, 1.0);
@@ -259,8 +260,8 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 //pop-up menu
 		
 		GtkWidget *menu = gtk_menu_new ();
-		GtkWidget *add = gtk_menu_item_new_with_label ("Add kun");
-		GtkWidget *del = gtk_menu_item_new_with_label ("Remove kun");
+		GtkWidget *add = gtk_menu_item_new_with_label ("Add");
+		GtkWidget *del = gtk_menu_item_new_with_label ("Remove");
 
 		g_signal_connect (G_OBJECT (add), "activate", G_CALLBACK (row_add), (gpointer) treeview);
 		g_signal_connect (G_OBJECT (del), "activate", G_CALLBACK (row_remove), (gpointer) treeview);
@@ -274,6 +275,16 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		g_signal_connect (G_OBJECT (treeview), "button-press-event", G_CALLBACK (popup_handler), GTK_MENU (menu));
 
 ////////pop-up end//////////////////////////
+//accelerators///////////////////////////
+/*
+		group = gtk_accel_group_new ();
+		gtk_window_add_accel_group (GTK_WINDOW (w.dialog), group);
+		gtk_menu_set_accel_group (GTK_MENU (menu), group);
+		gtk_widget_add_accelerator (treeview, "activate", group, GDK_DELETE, 0, 0);
+
+		g_signal_connect (G_OBJECT (treeview), "activate", G_CALLBACK (row_remove)
+*/
+/////////////////////////////////////////
 //
 		scrolled_win = gtk_scrolled_window_new (NULL, NULL);
 		gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
@@ -304,7 +315,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		gtk_table_attach (GTK_TABLE (table1), rst_label, 0, 1, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach (GTK_TABLE (table1), on_label, 0, 1, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
 //		gtk_table_attach (GTK_TABLE (table1), kun_label, 0, 1, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), meaning_label, 0, 1, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
+//		gtk_table_attach (GTK_TABLE (table1), meaning_label, 0, 1, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
 		gtk_table_attach (GTK_TABLE (table1), kun_label, 0, 1, 7, 8, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach_defaults (GTK_TABLE (table1), scrolled_win, 0, 2, 8, 9);//, GTK_EXPAND, GTK_SHRINK, 0, 0);
@@ -315,7 +326,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		gtk_table_attach (GTK_TABLE (table1), w.rst_spin, 1, 2, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
 		gtk_table_attach (GTK_TABLE (table1), w.on_entry, 1, 2, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
 //		gtk_table_attach (GTK_TABLE (table1), w.kun_entry, 1, 2, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), w.meaning_entry, 1, 2, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
+//		gtk_table_attach (GTK_TABLE (table1), w.meaning_entry, 1, 2, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
 		gtk_table_set_row_spacings (GTK_TABLE (table1), 5);
 		gtk_table_set_col_spacings (GTK_TABLE (table1), 5);
@@ -334,7 +345,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 				gtk_entry_set_text (GTK_ENTRY (w.kanji_entry), old->str);
 				gtk_entry_set_text (GTK_ENTRY (w.on_entry), old->on);
 //				gtk_entry_set_text (GTK_ENTRY (w.kun_entry), old->kun);
-				gtk_entry_set_text (GTK_ENTRY (w.meaning_entry), old->meaning);
+//				gtk_entry_set_text (GTK_ENTRY (w.meaning_entry), old->meaning);
 				gtk_entry_set_text (GTK_ENTRY (w.radical_entry), old->radical);
 
 				gtk_spin_button_set_value (GTK_SPIN_BUTTON (w.stroke_spin), old->stroke);
@@ -350,7 +361,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		{
 				const gchar *kanji_str = gtk_entry_get_text (GTK_ENTRY (w.kanji_entry));
 				const gchar *on_str = gtk_entry_get_text (GTK_ENTRY (w.on_entry));
-				const gchar *meaning_str = gtk_entry_get_text (GTK_ENTRY (w.meaning_entry));
+//				const gchar *meaning_str = gtk_entry_get_text (GTK_ENTRY (w.meaning_entry));
 				const gchar *radical_str = gtk_entry_get_text (GTK_ENTRY (w.radical_entry));
 				
 				gint stroke_cnt = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (w.stroke_spin));
@@ -378,7 +389,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 				}
 
 				Kanji *tmp;
-				tmp = kanji_create (kanji_str, radical_str, on_str, meaning_str, jlpt_lvl, grade, stroke_cnt, rst_cnt, num, writing, reading, meaning);
+				tmp = kanji_create (kanji_str, radical_str, on_str, NULL, jlpt_lvl, grade, stroke_cnt, rst_cnt, num, writing, reading, meaning);
 
 				gtk_widget_destroy (w.dialog);
 
