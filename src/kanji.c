@@ -21,6 +21,8 @@ Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *on, co
 
 		Kanji *k = (Kanji*) g_malloc0 (sizeof (Kanji));
 
+		k->state = TRUE;
+
 		k->kun_writing = (gchar**) g_malloc0 (sizeof (gchar*) * num);
 		k->kun_reading = (gchar**) g_malloc0 (sizeof (gchar*) * num);
 		k->kun_meaning = (gchar**) g_malloc0 (sizeof (gchar*) * num);
@@ -97,8 +99,10 @@ GArray* kanji_array_load (const gchar *filename)
 				return NULL;
 		}
 		
-		buf = g_malloc0 (1000 * sizeof (gchar));
+		buf = g_malloc0 (10000 * sizeof (gchar));
 		k = g_malloc0 (sizeof (Kanji));
+
+		k->state = TRUE;
 
 		pos = curpos = 0;
 
@@ -113,7 +117,7 @@ GArray* kanji_array_load (const gchar *filename)
 
 				//add more smart reading
 				curpos = ftell (f);
-				fread (buf, sizeof (gchar), 1000, f);
+				fread (buf, sizeof (gchar), 10000, f);
 
 				k->kun_writing = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
 				k->kun_reading = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
@@ -211,6 +215,12 @@ void kanji_array_save (const gchar *filename, GArray *arr)
 		k = &g_array_index (arr, Kanji, i = 0);
 		while (i < arr->len)
 		{
+				if (k-> state == FALSE)
+				{
+						k = &g_array_index (arr, Kanji, ++i);
+						continue;
+				}
+
 				fwrite (&(k->jlpt_level), sizeof (int), 1, f);
 				fwrite (&(k->grade), sizeof (int), 1, f);
 				fwrite (&(k->stroke), sizeof (int), 1, f);
@@ -251,14 +261,24 @@ void kanji_array_free (GArray *arr)
 		g_array_free (arr, TRUE);
 }
 
-//bad function ^_^
 void kanji_free (Kanji *k)
 {
+		int i;
+
 		g_free (k->str);
 		g_free (k->kun);
 		g_free (k->on);
 		g_free (k->meaning);
 		g_free (k->radical);
+
+		for (i = 0; i < k->num; i++)
+		{
+				g_free (k->kun_reading[i]);
+				g_free (k->kun_writing[i]);
+				g_free (k->kun_meaning[i]);
+		}
+
+		k->state = FALSE;
 
 //		g_free (k);
 }
