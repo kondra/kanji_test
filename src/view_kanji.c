@@ -23,18 +23,19 @@ enum
 		COLUMNS
 };
 
-static void setup_tree_view (GtkWidget*);
+static void setup_tree_view (GtkWidget*, Pair*);
 //static void view_kanji_flash_card (Kanji*);
 static void row_activated (GtkTreeView*, GtkTreePath*, GtkTreeViewColumn*, GArray*);
 static void row_add (GtkButton*, Pair*);
 static void row_remove (GtkButton*, Pair*);
 static void row_edit (GtkButton*, Pair*);
+static void close_dialog (GtkButton*, GtkDialog*);
 
-void view_kanji (GArray *arr)
+void kanji_list_view (GArray *arr)
 {
 		//GtkWidget *entry;
 		GtkWidget *dialog, *treeview, *scrolled_win;
-		GtkWidget *edit_button, *add_button, *remove_button, *hbox;
+		GtkWidget *close_button, *edit_button, *add_button, *remove_button, *hbox;
 		GtkListStore *store;
 		GtkTreeIter iter;
 		guint i, result;
@@ -47,7 +48,7 @@ void view_kanji (GArray *arr)
 		gtk_widget_set_size_request (GTK_WIDGET (dialog), 750, 400);
 
 		treeview = gtk_tree_view_new ();
-		setup_tree_view (treeview);
+		setup_tree_view (treeview, &p);
 
 		store = gtk_list_store_new (COLUMNS, G_TYPE_INT, G_TYPE_STRING, G_TYPE_INT, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 
@@ -78,16 +79,20 @@ void view_kanji (GArray *arr)
 		add_button = gtk_button_new_from_stock (GTK_STOCK_ADD);
 		remove_button = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
 		edit_button = gtk_button_new_from_stock (GTK_STOCK_EDIT);
+		close_button = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
 
 		g_signal_connect (G_OBJECT (add_button), "clicked", G_CALLBACK (row_add), (gpointer) &p);
 		g_signal_connect (G_OBJECT (remove_button), "clicked", G_CALLBACK (row_remove), (gpointer) &p);
 		g_signal_connect (G_OBJECT (edit_button), "clicked", G_CALLBACK (row_edit), (gpointer) &p);
+		g_signal_connect (G_OBJECT (close_button), "clicked", G_CALLBACK (close_dialog), (gpointer) dialog);
 
 		hbox = gtk_hbox_new (FALSE, 5);
 
 		gtk_box_pack_start (GTK_BOX (hbox), add_button, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox), remove_button, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox), edit_button, FALSE, FALSE, 5);
+
+		gtk_box_pack_start (GTK_BOX (hbox), close_button, FALSE, FALSE, 5);
 
 		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), scrolled_win, TRUE, TRUE, 5);
 		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, FALSE, FALSE, 5);
@@ -105,6 +110,11 @@ void view_kanji (GArray *arr)
 		result = gtk_dialog_run (GTK_DIALOG (dialog));
 
 		gtk_widget_destroy (dialog);
+}
+
+static void close_dialog (GtkButton *button, GtkDialog *dialog)
+{
+		gtk_dialog_response (dialog, GTK_RESPONSE_CLOSE);
 }
 
 static void row_edit (GtkButton *button, Pair *p)
@@ -160,7 +170,7 @@ static void row_remove (GtkButton *button, Pair *p)
 {
 		GtkTreeSelection *selection;
 		GtkTreeModel *model;
-		GtkTreeIter iter, it;
+		GtkTreeIter iter;//, it;
 		GtkWidget *treeview = p->tview;
 
 		int i;
@@ -172,41 +182,11 @@ static void row_remove (GtkButton *button, Pair *p)
 				return;
 
 		gtk_tree_model_get (model, &iter, NUMBER, &i, -1);
-		it = iter;
+		kanji_free (&g_array_index (p->arr, Kanji, i - 1));
 
-		g_array_remove_index (p->arr, i - 1);
-
-		while (gtk_tree_model_iter_next (model, &iter))
-		{
-				gtk_tree_model_get (model, &iter, NUMBER, &i, -1);
-				gtk_list_store_set (GTK_LIST_STORE (model), &iter, NUMBER, i - 1, -1);
-		}
-
-		gtk_list_store_remove (GTK_LIST_STORE (model), &it);
+		gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
 }
-/*
-//change ',' to '\n'
-static gchar* simple_coma_parser (gchar *str, gboolean mode)
-{
-		int i;
 
-		if (mode == TRUE)
-		{
-				for (i = 0; i < strlen (str); i++)
-						if (str[i] == ',')
-								str[i] = '\n';
-		}
-
-		if (mode == FALSE)
-		{
-				for (i = 0; i < strlen (str); i++)
-						if (str[i] == '\n')
-								str[i] = ',';
-		}
-
-		return str;
-}
-*/
 static void view_kanji_article (Kanji *kanji)
 {
 		GtkWidget *dialog, *scrolled, *textview;
@@ -352,7 +332,7 @@ static void row_activated (GtkTreeView *treeview, GtkTreePath *path, GtkTreeView
 		}
 }
 
-static void setup_tree_view (GtkWidget *treeview)
+static void setup_tree_view (GtkWidget *treeview, Pair *p)
 {
 		GtkCellRenderer *renderer;
 		GtkTreeViewColumn *column;
@@ -360,6 +340,7 @@ static void setup_tree_view (GtkWidget *treeview)
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Num", renderer, "text", NUMBER, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_column_set_visible (column, FALSE);
 		gtk_tree_view_column_set_reorderable (column, TRUE);
 		gtk_tree_view_column_set_sort_indicator (column, TRUE);
 		gtk_tree_view_column_set_sort_column_id (column, NUMBER);
@@ -390,8 +371,9 @@ static void setup_tree_view (GtkWidget *treeview)
 		gtk_tree_view_column_set_sort_indicator (column, TRUE);
 		gtk_tree_view_column_set_sort_column_id (column, RADICAL_STROKE);
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
-		
-		renderer = gtk_cell_renderer_text_new ();
+
+		renderer = gtk_cell_renderer_text_new (); 
+
 		column = gtk_tree_view_column_new_with_attributes ("JLPT", renderer, "text", JLPT_LEVEL, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
 		gtk_tree_view_column_set_reorderable (column, TRUE);
@@ -400,6 +382,7 @@ static void setup_tree_view (GtkWidget *treeview)
 		gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 		
 		renderer = gtk_cell_renderer_text_new ();
+
 		column = gtk_tree_view_column_new_with_attributes ("Grade", renderer, "text", SCHOOL_GRADE, NULL);
 		gtk_tree_view_column_set_resizable (column, TRUE);
 		gtk_tree_view_column_set_reorderable (column, TRUE);
