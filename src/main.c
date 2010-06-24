@@ -9,85 +9,6 @@
 static void button2_clicked (GtkButton*, GArray*);
 static void destroy (GtkWidget*, GArray*);
 
-static void parse (GArray *arr)
-{
-		Kanji *tmp, *tmp2;
-		int i, j, k, pos, num;
-		gchar c;
-		gchar *writing[100];
-		gchar *reading[100];
-		gchar *meaning[100];
-
-
-		for (i = 0; i < 100; i++)
-				writing[i] = meaning[i] = reading[i] = 0;
-
-		tmp = &g_array_index (arr, Kanji, i = 0);
-		while (i < arr->len)
-		{
-				num = 0;
-				j = 0;
-				pos = 0;
-				for (k = 0; k < strlen (tmp->kun) + 1; k++)
-				{
-						if (tmp->kun[k] == '\n' || tmp->kun[k] == ',' || tmp->kun[k] == '\0')
-						{
-								c = tmp->kun[k];
-								tmp->kun[k] = '\0';
-								if (tmp->kun[pos] == ' ')
-								{
-										reading[j] = g_strdup ((tmp->kun) + pos + 1);
-										writing[j] = g_strdup ((tmp->kun) + pos + 1);
-								}
-								else
-								{
-										reading[j] = g_strdup ((tmp->kun) + pos);
-										writing[j] = g_strdup ((tmp->kun) + pos);
-								}
-								tmp->kun[k] = c;
-								j++;
-								pos = k + 1;
-						}
-				}
-				num = j;
-				
-				pos = 0;
-				j = 0;
-				for (k = 0; k < strlen (tmp->meaning) + 1; k++)
-				{
-						if (tmp->meaning[k] == '\n' || tmp->meaning[k] == ',' || tmp->meaning[k] == '\0')
-						{
-								c = tmp->meaning[k];
-								tmp->meaning[k] = '\0';
-								if (tmp->meaning[pos] == ' ')
-										meaning[j] = g_strdup ((tmp->meaning) + pos + 1);
-								else
-										meaning[j] = g_strdup ((tmp->meaning) + pos);
-								tmp->meaning[k] = c;
-								j++;
-								pos = k + 1;
-						}
-				}
-				num = MAX (num, j);
-
-				tmp2 = kanji_create (tmp->str, tmp->radical, tmp->on, NULL, tmp->jlpt_level, tmp->grade, tmp->stroke, tmp->radical_stroke, num, 
-								writing, reading, meaning);
-
-				g_array_index (arr, Kanji, i) = *tmp2;
-				tmp = &g_array_index (arr, Kanji, ++i);
-
-				for (k = 0; k < num; k++)
-				{
-						g_free (reading[k]);
-						reading[k] = NULL;
-						g_free (writing[k]);
-						writing[k] = NULL;
-						g_free (meaning[k]);
-						meaning[k] = NULL;
-				}
-		}
-}
-
 int main (int argc, char *argv[])
 {
 		GtkWidget *window, *button2;
@@ -126,7 +47,7 @@ static void button2_clicked (GtkButton *button, GArray *arr)
 		if (arr == NULL)
 				return;
 
-		view_kanji (arr);
+		kanji_list_view (arr);
 }
 
 static void destroy (GtkWidget *window, GArray *arr)
