@@ -8,6 +8,8 @@ typedef struct
 		gchar **kun_writing;
 		gchar **kun_reading;
 		gchar **kun_meaning;
+
+		gboolean state;
 		
 		int jlpt_level, grade, stroke, radical_stroke;
 		gchar *str, *kun, *on, *meaning, *radical;
