@@ -29,7 +29,6 @@ static void upd_entry (GtkWidget*, Widgets*);
 static void setup_tree_view (GtkTreeView*);
 static void cell_edited (GtkCellRendererText*, gchar*, gchar*, GtkTreeView*);
 
-static gboolean popup_handler (GtkWidget*, GdkEventButton*, GtkMenu*);
 static void row_add (GtkMenuItem*, GtkTreeView*);
 static void row_remove (GtkMenuItem*, GtkTreeView*);
 static Kanji* create_dialog (Kanji*, gboolean);
@@ -42,31 +41,6 @@ Kanji* kanji_add_dialog (void)
 Kanji* kanji_edit_dialog (Kanji *old)
 {
 		return create_dialog (old, TRUE);
-}
-
-static gboolean popup_handler (GtkWidget *treeview, GdkEventButton *event, GtkMenu *menu)
-{
-		GtkTreeSelection *selection;
-
-		if ((event->button == 3) && (event->type == GDK_BUTTON_PRESS))
-		{
-				selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (treeview));
-				if (gtk_tree_selection_count_selected_rows (selection) <= 1)
-				{
-						GtkTreePath *path;
-
-						if (gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (treeview), (gint) event->x, (gint) event->y, &path, NULL, NULL, NULL))
-						{
-								gtk_tree_selection_unselect_all (selection);
-								gtk_tree_selection_select_path (selection, path);
-								gtk_tree_path_free (path);
-						}
-				}
-				gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL, event->button, event->time);
-
-				return TRUE;
-		}
-		return FALSE;
 }
 
 static void row_add (GtkMenuItem *item, GtkTreeView *treeview)
@@ -176,6 +150,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		gint result;
 		GtkWidget *table1, *table2, *lbl, *expander;
 		GtkWidget *kanji_label, *on_label, *kun_label, *jlpt_label, *grade_label, *radical_label, *stroke_label, *rst_label;
+		GtkWidget *add_button, *remove_button, *hbox;
 //		PangoFontDescription *font_desc;
 //		GList *focus_chain = NULL;//temp solution
 		Widgets w;
@@ -188,7 +163,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 								GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
 
 		gtk_container_set_border_width (GTK_CONTAINER (w.dialog), 5);
-		gtk_widget_set_size_request (GTK_WIDGET (w.dialog), 400, 500);
+		gtk_widget_set_size_request (GTK_WIDGET (w.dialog), 800, 600);
 		
 		lbl = gtk_label_new ("Required fields:");
 
@@ -258,7 +233,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 
 //Tree view end/////////////////////////////////////////////
 //pop-up menu
-		
+/*		
 		GtkWidget *menu = gtk_menu_new ();
 		GtkWidget *add = gtk_menu_item_new_with_label ("Add");
 		GtkWidget *del = gtk_menu_item_new_with_label ("Remove");
@@ -273,6 +248,18 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		gtk_widget_show_all (menu);
 
 		g_signal_connect (G_OBJECT (treeview), "button-press-event", G_CALLBACK (popup_handler), GTK_MENU (menu));
+*/
+
+		add_button = gtk_button_new_from_stock (GTK_STOCK_ADD);
+		remove_button = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
+
+		g_signal_connect (G_OBJECT (add_button), "clicked", G_CALLBACK (row_add), (gpointer) treeview);
+		g_signal_connect (G_OBJECT (remove_button), "clicked", G_CALLBACK (row_remove), (gpointer) treeview);
+
+		hbox = gtk_hbox_new (FALSE, 5);
+
+		gtk_box_pack_start (GTK_BOX (hbox), add_button, FALSE, FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (hbox), remove_button, FALSE, FALSE, 5);
 
 ////////pop-up end//////////////////////////
 //accelerators///////////////////////////
@@ -305,7 +292,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		gtk_table_set_row_spacings (GTK_TABLE (table2), 5);
 		gtk_table_set_col_spacings (GTK_TABLE (table2), 5);
 
-		table1 = gtk_table_new (9, 2, FALSE);
+		table1 = gtk_table_new (10, 2, FALSE);
 
 		gtk_table_attach (GTK_TABLE (table1), lbl, 0, 1, 0, 1, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
@@ -327,6 +314,8 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		gtk_table_attach (GTK_TABLE (table1), w.on_entry, 1, 2, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
 //		gtk_table_attach (GTK_TABLE (table1), w.kun_entry, 1, 2, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
 //		gtk_table_attach (GTK_TABLE (table1), w.meaning_entry, 1, 2, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
+
+		gtk_table_attach (GTK_TABLE (table1), hbox, 0, 1, 9, 10, GTK_EXPAND, GTK_SHRINK, 0, 0);
 
 		gtk_table_set_row_spacings (GTK_TABLE (table1), 5);
 		gtk_table_set_col_spacings (GTK_TABLE (table1), 5);
