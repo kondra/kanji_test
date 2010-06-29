@@ -14,7 +14,11 @@ int main (int argc, char *argv[])
 		GtkWidget *window, *button2;
 		GtkWidget *vbox;
 		GArray *arr;
-		
+
+//		Memory Profiling
+//		g_mem_set_vtable (glib_mem_profiler_table);
+//		g_atexit (g_mem_profile);
+
 		arr = kanji_array_load ("kanjidict");
 		if (arr == NULL)
 				arr = kanji_array_create;
@@ -52,8 +56,19 @@ static void button2_clicked (GtkButton *button, GArray *arr)
 
 static void destroy (GtkWidget *window, GArray *arr)
 {
+	//	GtkWidget *dialog;
+	//	int res;
+
 		if (arr != NULL)
-				kanji_array_save ("kanjidict", arr);
+		{
+//				dialog = gtk_message_dialog_new (GTK_WINDOW (window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, "Do you want to save dictionary before exit?");
+//				res = gtk_dialog_run (GTK_DIALOG (dialog));
+//				
+//				if (res == GTK_RESPONSE_YES)
+						kanji_array_save ("kanjidict", arr);
+
+//				gtk_widget_destroy (dialog);
+		}
 
 		gtk_main_quit ();
 }
