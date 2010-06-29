@@ -45,7 +45,7 @@ void kanji_list_view (GArray *arr)
 
 		dialog = gtk_dialog_new_with_buttons ("Kanji List", NULL, GTK_DIALOG_MODAL, NULL);
 		gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
-		gtk_widget_set_size_request (GTK_WIDGET (dialog), 750, 400);
+		gtk_widget_set_size_request (GTK_WIDGET (dialog), 500, 700);
 
 		treeview = gtk_tree_view_new ();
 		setup_tree_view (treeview, &p);
@@ -187,12 +187,54 @@ static void row_remove (GtkButton *button, Pair *p)
 		gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
 }
 
+static int kanji_meaning_parse (Kanji *k, int n, gchar *dst)
+{
+		gchar *src = k->kun_meaning[n];
+		int j, pos, state, cnt;
+		for (pos = 0, j = 0; j < strlen (src); j++)
+				if (src[j] == ';')
+				{
+						dst[pos++] = '1';
+						dst[pos++] = '.';
+						dst[pos++] = ' ';
+						break;
+				}
+		for (j = 0, state = 1, cnt = 1; j < strlen (src); j++, state++)
+		{
+				dst[pos] = src[j];
+				if (dst[pos] == ';')
+				{
+						cnt ++;
+						state = 1;
+						dst[pos] = 0;
+						sprintf (dst + pos + 1, "%d.", cnt);
+						pos += 1 + strlen (dst + pos + 1);
+						continue;
+				}
+				if (dst[pos] == '(' && state <= 3)
+				{
+						state = 0;
+						pos --;
+						while (src[j] != ')')
+								j++;
+						continue;
+				}
+				pos ++;
+		}
+		dst[pos++] = 0;
+		dst[pos++] = 1;
+		return cnt;
+}
+
 static void view_kanji_article (Kanji *kanji)
 {
 		GtkWidget *dialog, *scrolled, *textview;
 		GtkTextBuffer *buffer;
 		GtkTextIter start;//, end;
-		gchar *buf;
+		gchar *buf, *buf2;
+
+		buf = (gchar*) g_malloc0 (2000);
+		buf2 = (gchar*) g_malloc0 (2000);
 
 		dialog = gtk_dialog_new_with_buttons ("Kanji Flash Card", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
 		gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
@@ -206,19 +248,57 @@ static void view_kanji_article (Kanji *kanji)
 
 		gtk_text_buffer_create_tag (buffer, "kanji_font", "font", "46", NULL);
 		gtk_text_buffer_create_tag (buffer, "on_font", "font", "20", NULL);
-		gtk_text_buffer_create_tag (buffer, "on_color", "foreground", "#443FD1", NULL);
+		gtk_text_buffer_create_tag (buffer, "on_color", "foreground", "#000000", NULL);
+		gtk_text_buffer_create_tag (buffer, "kun_color", "foreground", "#1E7681", NULL);
+		gtk_text_buffer_create_tag (buffer, "kun_font", "font", "12", NULL);
 
 		gtk_text_buffer_get_start_iter (buffer, &start);
 		gtk_text_buffer_insert_with_tags_by_name (buffer, &start, kanji->str, -1, "kanji_font", NULL);
 
 		gtk_text_buffer_get_end_iter (buffer, &start);
-		buf = g_strdup_printf (" %d\n", kanji->stroke);
+		sprintf (buf, " %d\n", kanji->stroke);
 		gtk_text_buffer_insert (buffer, &start, buf, -1);
-		g_free (buf);
 
 		gtk_text_buffer_get_end_iter (buffer, &start);
-		buf = g_strdup_printf ("    %s\n", kanji->on);
+		sprintf (buf, "    %s\n\n", kanji->on);
 		gtk_text_buffer_insert_with_tags_by_name (buffer, &start, buf, -1, "on_font", "on_color", NULL);
+
+		int i, j, f, k;
+		int spacing = 10;
+		for (i = 0; i < kanji->num; i++)
+		{
+				gtk_text_buffer_get_end_iter (buffer, &start);
+				f = kanji_meaning_parse (kanji, i, buf2);
+				f --;
+		//		sprintf (buf, " %s [%s] %s\n", kanji->kun_writing[i], kanji->kun_reading[i], buf2);
+				sprintf (buf, " %s", kanji->kun_writing[i]);
+				gtk_text_buffer_insert_with_tags_by_name (buffer, &start, buf, -1, "kun_font", NULL);
+
+				gtk_text_buffer_get_end_iter (buffer, &start);
+				if (f)
+						sprintf (buf, " [%s]\n", kanji->kun_reading[i]);
+				else
+						sprintf (buf, " [%s]", kanji->kun_reading[i]);
+				gtk_text_buffer_insert_with_tags_by_name (buffer, &start, buf, -1, "kun_color", "kun_font", NULL);
+
+				j = 0;
+				while (buf2[j] != 1)
+				{
+						gtk_text_buffer_get_end_iter (buffer, &start);
+						for (k = 0; f && k < spacing; k++)
+						{
+								gtk_text_buffer_insert (buffer, &start, " ", -1);
+								gtk_text_buffer_get_end_iter (buffer, &start);
+						}
+						sprintf (buf, " %s\n", buf2 + j);
+						gtk_text_buffer_insert (buffer, &start, buf, -1);
+//						printf ("%s\n", buf);
+						j += strlen (buf) - 1;
+//						g_debug ("%d", j);
+				}
+				gtk_text_buffer_get_end_iter (buffer, &start);
+				gtk_text_buffer_insert (buffer, &start, "\n", -1);
+		}
 
 		scrolled = gtk_scrolled_window_new (NULL, NULL);
 		gtk_container_add (GTK_CONTAINER (scrolled), textview);
@@ -228,90 +308,11 @@ static void view_kanji_article (Kanji *kanji)
 		gtk_widget_show_all (dialog);
 		gtk_dialog_run (GTK_DIALOG (dialog));
 		gtk_widget_destroy (dialog);
+
+		//g_free (buf);
+		//g_free (buf2);
 }
-/*
-static void view_kanji_flash_card (Kanji *kanji)
-{
-		GtkWidget *dialog;
-		GtkWidget *kanji_label, *on_label, *kun_label, *meaning_label, *jlpt_label, *grade_label, *radical_label, *stroke_label;
-		GtkWidget *on_lbl, *kun_lbl, *meaning_lbl, *radical_lbl, *descr_lbl, *jlpt_lbl, *grade_lbl; 
-		GtkWidget *table1;
 
-		int result;
-
-		dialog = gtk_dialog_new_with_buttons ("Kanji Flash Card", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
-		gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
-
-		kanji_label = gtk_label_new (NULL);
-		gtk_label_set_markup (GTK_LABEL (kanji_label), g_strconcat ("<span font_desc='76'>", kanji->str, "</span>", NULL));
-
-		on_label = gtk_label_new (NULL);
-		gtk_label_set_selectable (GTK_LABEL (on_label), TRUE);
-		gtk_label_set_markup (GTK_LABEL (on_label), g_strconcat ("<span font_desc='14'>", simple_coma_parser (kanji->on, TRUE), "</span>", NULL));
-		
-		kun_label = gtk_label_new (NULL);
-		gtk_label_set_selectable (GTK_LABEL (kun_label), TRUE);
-		gtk_label_set_markup (GTK_LABEL (kun_label), g_strconcat ("<span font_desc='14'>", simple_coma_parser (kanji->kun, TRUE), "</span>", NULL));
-	
-		meaning_label = gtk_label_new (simple_coma_parser (kanji->meaning, TRUE));
-
-		jlpt_label = gtk_label_new (g_strdup_printf ("%d", kanji->jlpt_level));
-		
-		grade_label = gtk_label_new (g_strdup_printf ("%d", kanji->grade));
-	
-		radical_label = gtk_label_new (NULL);
-		gtk_label_set_selectable (GTK_LABEL (radical_label), TRUE);
-		gtk_label_set_markup (GTK_LABEL (radical_label), g_strconcat ("<span font_desc='20'>", kanji->radical, "</span>", NULL));
-	
-		stroke_label = gtk_label_new (g_strdup_printf ("%d-%d", kanji->stroke, kanji->radical_stroke));
-
-		on_lbl = gtk_label_new ("On:");
-		kun_lbl = gtk_label_new ("Kun:");
-		meaning_lbl = gtk_label_new ("Meaning:");
-		radical_lbl = gtk_label_new ("Radical:");
-		descr_lbl = gtk_label_new ("Kanji-Radical Stroke:");
-		jlpt_lbl = gtk_label_new ("JLPT Level:");
-		grade_lbl = gtk_label_new ("School Grade:");
-
-		gtk_box_pack_start_defaults (GTK_BOX (GTK_DIALOG (dialog)->vbox), kanji_label);
-
-		table1 = gtk_table_new (7, 2, FALSE);
-
-		gtk_table_attach (GTK_TABLE (table1), radical_lbl, 0, 1, 0, 1, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), descr_lbl, 0, 1, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), on_lbl, 0, 1, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), kun_lbl, 0, 1, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), meaning_lbl, 0, 1, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), jlpt_lbl, 0, 1, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), grade_lbl, 0, 1, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
-//		gtk_table_attach (GTK_TABLE (table1), _lbl, 0, 1, 7, 8, GTK_EXPAND, GTK_SHRINK, 0, 0);
-
-		gtk_table_attach (GTK_TABLE (table1), radical_label, 1, 2, 0, 1, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), stroke_label, 1, 2, 1, 2, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), on_label, 1, 2, 2, 3, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), kun_label, 1, 2, 3, 4, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), meaning_label, 1, 2, 4, 5, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), jlpt_label, 1, 2, 5, 6, GTK_EXPAND, GTK_SHRINK, 0, 0);
-		gtk_table_attach (GTK_TABLE (table1), grade_label, 1, 2, 6, 7, GTK_EXPAND, GTK_SHRINK, 0, 0);
-//		gtk_table_attach (GTK_TABLE (table1), _label, 1, 2, 7, 8, GTK_EXPAND, GTK_SHRINK, 0, 0);
-
-		gtk_table_set_row_spacings (GTK_TABLE (table1), 5);
-		gtk_table_set_col_spacings (GTK_TABLE (table1), 5);
-		
-		gtk_box_pack_start_defaults (GTK_BOX (GTK_DIALOG (dialog)->vbox), table1);
-
-		gtk_dialog_set_has_separator (GTK_DIALOG (dialog), FALSE);
-		
-		gtk_widget_show_all (dialog);
-		result = gtk_dialog_run (GTK_DIALOG (dialog));
-
-		gtk_widget_destroy (dialog);
-		
-		simple_coma_parser (kanji->on, FALSE);
-		simple_coma_parser (kanji->meaning, FALSE);
-		simple_coma_parser (kanji->kun, FALSE);
-}
-*/
 static void row_activated (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *column, GArray *arr)
 {
 		GtkTreeModel *model;
@@ -327,7 +328,6 @@ static void row_activated (GtkTreeView *treeview, GtkTreePath *path, GtkTreeView
 				gtk_tree_model_get (model, &iter, NUMBER, &i, -1);
 				tmp = &g_array_index (arr, Kanji, i - 1);
 
-//				view_kanji_flash_card (tmp);
 				view_kanji_article (tmp);
 		}
 }
