@@ -24,7 +24,6 @@ enum
 };
 
 static void setup_tree_view (GtkWidget*, Pair*);
-//static void view_kanji_flash_card (Kanji*);
 static void row_activated (GtkTreeView*, GtkTreePath*, GtkTreeViewColumn*, GArray*);
 static void row_add (GtkButton*, Pair*);
 static void row_remove (GtkButton*, Pair*);
@@ -33,7 +32,6 @@ static void close_dialog (GtkButton*, GtkDialog*);
 
 void kanji_list_view (GArray *arr)
 {
-		//GtkWidget *entry;
 		GtkWidget *dialog, *treeview, *scrolled_win;
 		GtkWidget *close_button, *edit_button, *add_button, *remove_button, *hbox;
 		GtkListStore *store;
@@ -98,11 +96,6 @@ void kanji_list_view (GArray *arr)
 		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, FALSE, FALSE, 5);
 
 		gtk_tree_view_set_enable_search (GTK_TREE_VIEW (treeview), FALSE);
-	//	gtk_tree_view_set_search_column (GTK_TREE_VIEW (treeview), ON);
-	//	entry = gtk_entry_new ();
-	//	gtk_tree_view_set_search_entry (GTK_TREE_VIEW (treeview), GTK_ENTRY (entry));
-
-	//	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), entry, FALSE, FALSE, 5);
 
 		gtk_dialog_set_has_separator (GTK_DIALOG (dialog), FALSE);
 
@@ -226,20 +219,22 @@ static int kanji_meaning_parse (Kanji *k, int n, gchar *dst)
 		return cnt;
 }
 
-static void view_kanji_article (Kanji *kanji)
+void kanji_article_view (Kanji *kanji)
 {
 		GtkWidget *dialog, *scrolled, *textview;
 		GtkTextBuffer *buffer;
-		GtkTextIter start;//, end;
-		gchar *buf, *buf2;
+		GtkTextIter start;
+		static gchar *buf = NULL, *buf2 = NULL;
 
-		buf = (gchar*) g_malloc0 (2000);
-		buf2 = (gchar*) g_malloc0 (2000);
+		if (buf == NULL)
+				buf = (gchar*) g_malloc0 (2000);
+		if (buf2 == NULL)
+				buf2 = (gchar*) g_malloc0 (2000);
 
 		dialog = gtk_dialog_new_with_buttons ("Kanji Flash Card", NULL, GTK_DIALOG_MODAL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
 		gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
 		gtk_dialog_set_has_separator (GTK_DIALOG (dialog), FALSE);
-		gtk_widget_set_size_request (GTK_WIDGET (dialog), 400, 600);
+		gtk_widget_set_size_request (GTK_WIDGET (dialog), 600, 500);
 
 		textview = gtk_text_view_new ();
 		gtk_text_view_set_editable (GTK_TEXT_VIEW (textview), FALSE);
@@ -248,16 +243,21 @@ static void view_kanji_article (Kanji *kanji)
 
 		gtk_text_buffer_create_tag (buffer, "kanji_font", "font", "46", NULL);
 		gtk_text_buffer_create_tag (buffer, "on_font", "font", "20", NULL);
-		gtk_text_buffer_create_tag (buffer, "on_color", "foreground", "#000000", NULL);
+		gtk_text_buffer_create_tag (buffer, "on_color", "foreground", "#B86060", NULL);
 		gtk_text_buffer_create_tag (buffer, "kun_color", "foreground", "#1E7681", NULL);
 		gtk_text_buffer_create_tag (buffer, "kun_font", "font", "12", NULL);
+		gtk_text_buffer_create_tag (buffer, "info_color", "foreground", "#6A6A6A", NULL);
 
 		gtk_text_buffer_get_start_iter (buffer, &start);
 		gtk_text_buffer_insert_with_tags_by_name (buffer, &start, kanji->str, -1, "kanji_font", NULL);
 
 		gtk_text_buffer_get_end_iter (buffer, &start);
-		sprintf (buf, " %d\n", kanji->stroke);
+		sprintf (buf, " %d\n\n", kanji->stroke);
 		gtk_text_buffer_insert (buffer, &start, buf, -1);
+
+		gtk_text_buffer_get_end_iter (buffer, &start);
+		sprintf (buf, " Radical %s\n Radical Stroke - %d\n JLPT Level - %d\n School Grade - %d\n\n", kanji->radical, kanji->radical_stroke, kanji->jlpt_level, kanji->grade);
+		gtk_text_buffer_insert_with_tags_by_name (buffer, &start, buf, -1, "info_color", NULL);
 
 		gtk_text_buffer_get_end_iter (buffer, &start);
 		sprintf (buf, "    %s\n\n", kanji->on);
@@ -270,7 +270,6 @@ static void view_kanji_article (Kanji *kanji)
 				gtk_text_buffer_get_end_iter (buffer, &start);
 				f = kanji_meaning_parse (kanji, i, buf2);
 				f --;
-		//		sprintf (buf, " %s [%s] %s\n", kanji->kun_writing[i], kanji->kun_reading[i], buf2);
 				sprintf (buf, " %s", kanji->kun_writing[i]);
 				gtk_text_buffer_insert_with_tags_by_name (buffer, &start, buf, -1, "kun_font", NULL);
 
@@ -292,9 +291,7 @@ static void view_kanji_article (Kanji *kanji)
 						}
 						sprintf (buf, " %s\n", buf2 + j);
 						gtk_text_buffer_insert (buffer, &start, buf, -1);
-//						printf ("%s\n", buf);
 						j += strlen (buf) - 1;
-//						g_debug ("%d", j);
 				}
 				gtk_text_buffer_get_end_iter (buffer, &start);
 				gtk_text_buffer_insert (buffer, &start, "\n", -1);
@@ -308,9 +305,6 @@ static void view_kanji_article (Kanji *kanji)
 		gtk_widget_show_all (dialog);
 		gtk_dialog_run (GTK_DIALOG (dialog));
 		gtk_widget_destroy (dialog);
-
-		//g_free (buf);
-		//g_free (buf2);
 }
 
 static void row_activated (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *column, GArray *arr)
@@ -328,7 +322,7 @@ static void row_activated (GtkTreeView *treeview, GtkTreePath *path, GtkTreeView
 				gtk_tree_model_get (model, &iter, NUMBER, &i, -1);
 				tmp = &g_array_index (arr, Kanji, i - 1);
 
-				view_kanji_article (tmp);
+				kanji_article_view (tmp);
 		}
 }
 
