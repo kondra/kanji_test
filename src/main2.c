@@ -133,7 +133,6 @@ static void radical_button_toggled (GtkWidget *button, Widgets *p)
 		gchar buf[10000];
 		guint off = 0;
 
-		g_debug ("%d", count);
 		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button)) == TRUE)
 		{
 				for (i = 0; i < g_array_index (radicals, Radical, k).num; i++)
@@ -162,6 +161,12 @@ static void radical_button_toggled (GtkWidget *button, Widgets *p)
 		}
 		else
 		{
+				for (k = 0; k < kanji->len; k++)
+						g_array_index (kanji, KanjiDecomposition, k).state = 1;
+
+				for (i = 0; i < radicals->len; i++)
+						g_array_index (radicals, Radical, i).state = 0;
+
 				if (count == 2)
 				{
 						for (i = 0; i < radicals->len; i++)
@@ -172,14 +177,12 @@ static void radical_button_toggled (GtkWidget *button, Widgets *p)
 						}
 						count--;
 						buf[0] = 0;
-//						gtk_label_set_text (label, " ");
+						gtk_label_set_text (label, NULL); 
 						return;
 				}
+
 				save = count - 2;
 				count = 1;
-
-				for (k = 0; k < kanji->len; k++)
-						g_array_index (kanji, KanjiDecomposition, k).state = 1;
 
 				for (k = 0; k < radicals->len; k++)
 				{
@@ -188,7 +191,6 @@ static void radical_button_toggled (GtkWidget *button, Widgets *p)
 						if ( gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (p->buttons[x][y])) == FALSE)
 								continue;
 
-						g_debug ("%d", k);
 						for (i = 0; i < g_array_index (radicals, Radical, k).num; i++)
 						{
 								l = g_array_index (radicals, Radical, k).kanji[i];
