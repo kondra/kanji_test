@@ -26,6 +26,7 @@ typedef struct
 
 typedef struct
 {
+		gboolean cleared;
 		GArray *radicals;
 		GArray *kanji;
 		GtkWidget *label;
@@ -34,6 +35,7 @@ typedef struct
 
 static void destroy (GtkWidget*, gpointer);
 static void radical_button_toggled (GtkWidget*, Widgets*);
+static void clear (GtkWidget*, Widgets*);
 static GArray* radicals_process (const gchar*);
 static GArray* kanji_decomposition_process (const gchar*);
 
@@ -133,6 +135,12 @@ static void radical_button_toggled (GtkWidget *button, Widgets *p)
 		gchar buf[10000];
 		guint off = 0;
 
+		if (p->cleared)
+		{
+				p->cleared = FALSE;
+				count = 1;
+		}
+
 		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button)) == TRUE)
 		{
 				for (i = 0; i < g_array_index (radicals, Radical, k).num; i++)
@@ -224,11 +232,30 @@ static void radical_button_toggled (GtkWidget *button, Widgets *p)
 		}
 }
 
+static void clear (GtkWidget *button, Widgets *p)
+{
+		p->cleared = TRUE;
+		guint i, x, y;
+		for (i = 0; i < p->kanji->len; i++)
+				g_array_index (p->kanji, KanjiDecomposition, i).state = 1;
+
+		for (i = 0; i < p->radicals->len; i++)
+		{
+				g_array_index (p->radicals, Radical, i).state = 0;
+				x = g_array_index (p->radicals, Radical, i).x;
+				y = g_array_index (p->radicals, Radical, i).y;
+				gtk_widget_set_sensitive (p->buttons[x][y], TRUE);
+				if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (p->buttons[x][y])) == TRUE)
+						gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (p->buttons[x][y]), FALSE);
+		}
+		gtk_label_set_text (GTK_LABEL (p->label), NULL); 
+}
+
 int main (int argc, char *argv[])
 {
 		GtkWidget *window;
 		GtkWidget *table, *scrolled;
-		GtkWidget *vbox;
+		GtkWidget *vbox, *hbox, *reset_button;
 
 		guint16 i, j;
 		guint k;
@@ -262,6 +289,7 @@ int main (int argc, char *argv[])
 		p.label = gtk_label_new (NULL);
 		gtk_label_set_selectable (GTK_LABEL (p.label), TRUE);
 
+		p.cleared = FALSE;
 		p.radicals = radicals;
 		p.kanji = kanji;
 
@@ -292,7 +320,14 @@ int main (int argc, char *argv[])
 
 		g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), NULL);
 
+		reset_button = gtk_button_new_from_stock (GTK_STOCK_CLEAR);
+		g_signal_connect (G_OBJECT (reset_button), "clicked", G_CALLBACK (clear), (gpointer) &p);
+
+		hbox = gtk_hbox_new (FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (hbox), reset_button, FALSE, FALSE, 5);
+
 		vbox = gtk_vbox_new (FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (vbox), p.label, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (vbox), scrolled, TRUE, TRUE, 5);
 
