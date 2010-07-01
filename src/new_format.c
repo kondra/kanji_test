@@ -140,13 +140,14 @@ static void new_format (GArray *rad, GArray *kan)
 
 				fwrite (g_array_index (rad, Radical, i).rad, sizeof (gchar), strlen (g_array_index (rad, Radical, i).rad) + 1, f);
 //				g_debug ("1");
+				g_array_index (rad, Radical, i).stroke2 = (guint8) g_array_index (rad, Radical, i).stroke;
 				fwrite (&(g_array_index (rad, Radical, i).stroke2), sizeof (guint8), 1, f);
 				fwrite (&(g_array_index (rad, Radical, i).num), sizeof (guint16), 1, f);
 //				g_debug ("%d", g_array_index (rad, Radical, i).num);
 //				g_debug ("2");
 				fwrite (g_array_index (rad, Radical, i).kanji2, sizeof (guint16), g_array_index (rad, Radical, i).num, f);
-				for (j = 0; j < g_array_index (rad, Radical, i).num; j++)
-						g_debug ("%d", g_array_index (rad, Radical, i).kanji2[j]);
+		//		for (j = 0; j < g_array_index (rad, Radical, i).num; j++)
+		//				g_debug ("%d", g_array_index (rad, Radical, i).kanji2[j]);
 //				g_debug ("3");
 		}
 		fclose (f);
@@ -176,9 +177,9 @@ static void new_format (GArray *rad, GArray *kan)
 				fread (&num1, sizeof (guint16), 1, f);
 
 				fread (rs1, sizeof (guint16), num1, f);
-				for (j = 0; j < num1; j++){
-						fprintf (f1, "%d ", rs1[j]);
-				}
+//				for (j = 0; j < num1; j++){
+//						fprintf (f1, "%d ", rs1[j]);
+//				}
 				fprintf (f1, "\n");
 		}
 		fclose (f1);
@@ -332,7 +333,7 @@ static GArray* kanji_decomposition_process (gchar *contents, gsize bytes)
 
 int main (int argc, char *argv[])
 {
-		int i, j, k;
+		//int i, j, k;
 
 		const gchar filename1[] = "radkfile";
 		const gchar filename2[] = "kradfile";
