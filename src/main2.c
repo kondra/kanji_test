@@ -260,6 +260,7 @@ int main (int argc, char *argv[])
 		gtk_table_set_col_spacings (GTK_TABLE (table), 2);
 
 		p.label = gtk_label_new (NULL);
+		gtk_label_set_selectable (GTK_LABEL (p.label), TRUE);
 
 		p.radicals = radicals;
 		p.kanji = kanji;
