@@ -153,7 +153,7 @@ static void radical_button_toggled (GtkWidget *button, Widgets *p)
 				{
 						x = g_array_index (radicals, Radical, i).x;
 						y = g_array_index (radicals, Radical, i).y;
-						gtk_widget_set_sensitive (p->buttons[x][y], g_array_index (radicals, Radical, i).state == count);
+						gtk_widget_set_sensitive (p->buttons[x][y], (g_array_index (radicals, Radical, i).state == count));
 				}
 
 				gtk_label_set_text (label, buf);
@@ -269,7 +269,7 @@ int main (int argc, char *argv[])
 				for (j = 0; j < 50; j++)
 				{
 						p.buttons[i][j] = NULL;
-						if (g_array_index (radicals, Radical, k).stroke == i + 1)
+						if (g_array_index (radicals, Radical, k).stroke == i + 1 || (i == 13 && g_array_index (radicals, Radical, k).stroke >= i + 1))
 						{
 								p.buttons[i][j] = gtk_toggle_button_new_with_label (g_array_index (radicals, Radical, k).rad);
 								g_object_set_data (G_OBJECT (p.buttons[i][j]), "index", GUINT_TO_POINTER (k));
