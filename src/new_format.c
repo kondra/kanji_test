@@ -43,8 +43,12 @@ static void new_format (GArray *rad, GArray *kan)
 				{
 						for (j = 0; j < rad->len; j++)
 						{
-								if (g_utf8_collate (g_array_index (rad, Radical, j).rad, g_array_index (kan, KanjiDecomposition, i).radicals[k]) == 0)
+								if (strcmp (g_array_index (rad, Radical, j).rad, g_array_index (kan, KanjiDecomposition, i).radicals[k]) == 0)
 								{
+										if (i==58)
+										{
+												printf ("%d %s %s\n", j, g_array_index (rad, Radical, j).rad, g_array_index (kan, KanjiDecomposition, i).radicals[k]);
+										}
 										g_array_index (kan, KanjiDecomposition, i).radicals2[k] = j;
 //										g_debug ("%s -%d", g_array_index (kan, KanjiDecomposition, i).radicals[k], j);
 										break;
