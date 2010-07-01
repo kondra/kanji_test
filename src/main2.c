@@ -1,71 +1,240 @@
 //it's a testing version of multiradical search
 
 #include <gtk/gtk.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct
 {
-		int stroke;
-		int x, y; // coordinates in buttons table
+		guint x, y; // coordinates in buttons table
 		gchar *rad;
+		guint state;
+
+		guint8 stroke;
+		guint16 num;
+		guint16 *kanji;
 } Radical;
 
-static void destroy (GtkWidget*, gpointer);
-
-static gsize radicals_load (gchar **contents, const gchar *filename, GError *error)
+typedef struct
 {
-		gsize bytes;
-
-		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
-				g_warning ("Error: file %s does not exist", filename);
-
-		g_file_get_contents (filename, contents, &bytes, &error);
+		gchar *kanji;
+		guint state;
 		
-		if (error != NULL)
-				g_warning ("Error: radicals_load function");
+		guint8 num;
+		guint16 *radicals;
+} KanjiDecomposition;
 
-		return bytes;
-}
+typedef struct
+{
+		GArray *radicals;
+		GArray *kanji;
+		GtkWidget *label;
+		GtkWidget *buttons[14][50];
+} Widgets;
 
-static GArray* radicals_process (gchar *contents, gsize bytes)
+static void destroy (GtkWidget*, gpointer);
+static void radical_button_toggled (GtkWidget*, Widgets*);
+static GArray* radicals_process (const gchar*);
+static GArray* kanji_decomposition_process (const gchar*);
+
+static GArray* radicals_process (const gchar *filename)
 {
 		GArray *arr;
-		int i, j, k;
+		FILE *f;
+		f = fopen (filename, "rb");
 
-		arr = g_array_sized_new (TRUE, TRUE, sizeof (Radical), 500);
+		gchar buf[20];
 
-		for (k = 0, i = 1; i < bytes; i++)
+		int l, i, j;
+
+		fread (&l, sizeof (int), 1, f);
+		arr = g_array_sized_new (TRUE, TRUE, sizeof (Radical), l);
+		arr->len = l;
+
+		for (i = 0; i < l; i++)
 		{
-				if (contents[i] == '\n' && contents[i + 1] == '$')
+				j = 0;
+				while (1)	
 				{
-						i += 3;
-						j = i;
-						while (contents[j] != ' ')
-								j++;
-						contents[j] = 0;
-						g_array_index (arr, Radical, k).rad = g_strdup (contents + i);
-						contents[j] = ' ';
-						sscanf (contents + j, "%d", &(g_array_index (arr, Radical, k).stroke));
-						i = j;
-						k++;
+						fread (&buf[j], sizeof (gchar), 1, f);
+
+						if (buf[j] == 0)
+								break;
+
+						j++;
 				}
+				g_array_index (arr, Radical, i).rad = g_strdup (buf);
+				g_array_index (arr, Radical, i).state = 0;
+
+				fread (&(g_array_index (arr, Radical, i).stroke), sizeof (guint8), 1, f);
+				fread (&(g_array_index (arr, Radical, i).num), sizeof (guint16), 1, f);
+
+				g_array_index (arr, Radical, i).kanji = (guint16*) g_malloc0 (sizeof (guint16) * g_array_index (arr, Radical, i).num);
+				fread (g_array_index (arr, Radical, i).kanji, sizeof (guint16), g_array_index (arr, Radical, i).num, f);
 		}
+		fclose (f);
 
 		return arr;
+}
+
+
+static GArray* kanji_decomposition_process (const gchar *filename)
+{
+		GArray *arr;
+		FILE *f;
+		f = fopen (filename, "rb");
+
+		gchar buf[20];
+
+		int l, i, j;
+
+		fread (&l, sizeof (int), 1, f);
+		arr = g_array_sized_new (TRUE, TRUE, sizeof (KanjiDecomposition), l);
+		arr->len = l;
+
+		for (i = 0; i < l; i++)
+		{
+				j = 0;
+				while (1)	
+				{
+						fread (&buf[j], sizeof (gchar), 1, f);
+
+						if (buf[j] == 0)
+								break;
+
+						j++;
+				}
+				g_array_index (arr, KanjiDecomposition, i).kanji = g_strdup (buf);
+				g_array_index (arr, KanjiDecomposition, i).state = 1;
+
+				fread (&(g_array_index (arr, KanjiDecomposition, i).num), sizeof (guint8), 1, f);
+				
+				g_array_index (arr, KanjiDecomposition, i).radicals = (guint16*) g_malloc0 (sizeof (guint16) * g_array_index (arr, KanjiDecomposition, i).num);
+				fread (g_array_index (arr, KanjiDecomposition, i).radicals, sizeof (guint16), g_array_index (arr, KanjiDecomposition, i).num, f);
+		}
+		fclose (f);
+
+		return arr;
+}
+
+static void radical_button_toggled (GtkWidget *button, Widgets *p)
+{
+		GArray *radicals = p->radicals;
+		GArray *kanji = p->kanji;
+
+		static guint count = 1;
+		guint save;
+
+		GtkLabel *label = GTK_LABEL (p->label);
+		guint k = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (button), "index"));
+		guint x, y;
+		guint16 j, l, i;
+
+		gchar buf[10000];
+		guint off = 0;
+
+		g_debug ("%d", count);
+		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button)) == TRUE)
+		{
+				for (i = 0; i < g_array_index (radicals, Radical, k).num; i++)
+				{
+						l = g_array_index (radicals, Radical, k).kanji[i];
+						if (g_array_index (kanji, KanjiDecomposition, l).state == count)
+						{
+								sprintf (buf + off, "%s ", g_array_index (kanji, KanjiDecomposition, l).kanji);
+								off += strlen (g_array_index (kanji, KanjiDecomposition, l).kanji) + 1;
+
+								g_array_index (kanji, KanjiDecomposition, l).state ++;
+								for (j = 0; j < g_array_index (kanji, KanjiDecomposition, l).num; j++)
+										g_array_index (radicals, Radical, g_array_index (kanji, KanjiDecomposition, l).radicals[j]).state = count;
+						}
+				}
+
+				for (i = 0; i < radicals->len; i++)
+				{
+						x = g_array_index (radicals, Radical, i).x;
+						y = g_array_index (radicals, Radical, i).y;
+						gtk_widget_set_sensitive (p->buttons[x][y], g_array_index (radicals, Radical, i).state == count);
+				}
+
+				gtk_label_set_text (label, buf);
+				count++;
+		}
+		else
+		{
+				if (count == 2)
+				{
+						for (i = 0; i < radicals->len; i++)
+						{
+								x = g_array_index (radicals, Radical, i).x;
+								y = g_array_index (radicals, Radical, i).y;
+								gtk_widget_set_sensitive (p->buttons[x][y], TRUE);
+						}
+						count--;
+						buf[0] = 0;
+//						gtk_label_set_text (label, " ");
+						return;
+				}
+				save = count - 2;
+				count = 1;
+
+				for (k = 0; k < kanji->len; k++)
+						g_array_index (kanji, KanjiDecomposition, k).state = 1;
+
+				for (k = 0; k < radicals->len; k++)
+				{
+						x = g_array_index (radicals, Radical, k).x;
+						y = g_array_index (radicals, Radical, k).y;
+						if ( gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (p->buttons[x][y])) == FALSE)
+								continue;
+
+						g_debug ("%d", k);
+						for (i = 0; i < g_array_index (radicals, Radical, k).num; i++)
+						{
+								l = g_array_index (radicals, Radical, k).kanji[i];
+								if (g_array_index (kanji, KanjiDecomposition, l).state == count)
+								{
+										if (count == save)
+										{
+												sprintf (buf + off, "%s ", g_array_index (kanji, KanjiDecomposition, l).kanji);
+												off += strlen (g_array_index (kanji, KanjiDecomposition, l).kanji) + 1;
+										}
+
+										g_array_index (kanji, KanjiDecomposition, l).state ++;
+										for (j = 0; j < g_array_index (kanji, KanjiDecomposition, l).num; j++)
+												g_array_index (radicals, Radical, g_array_index (kanji, KanjiDecomposition, l).radicals[j]).state = count;
+								}
+						}
+
+						count++;
+				}
+
+				count--;
+				for (i = 0; i < radicals->len; i++)
+				{
+						x = g_array_index (radicals, Radical, i).x;
+						y = g_array_index (radicals, Radical, i).y;
+						gtk_widget_set_sensitive (p->buttons[x][y], g_array_index (radicals, Radical, i).state == count);
+				}
+				count++;
+
+				gtk_label_set_text (label, buf);
+		}
 }
 
 int main (int argc, char *argv[])
 {
 		GtkWidget *window;
 		GtkWidget *table, *scrolled;
-		GtkWidget *buttons[50][14];
+		GtkWidget *vbox;
 
-		int i, j, k;
+		guint16 i, j;
+		guint k;
 
-		const gchar filename[] = "radkfile";
-		gchar *contents = NULL;
-		gsize bytes;
-		GError *error = NULL;
-		GArray *arr;
+		const gchar filename1[] = "rindex";
+		const gchar filename2[] = "kindex";
+		GArray *radicals, *kanji;
+		Widgets p;
 
 //		Memory Profiling
 //		g_mem_set_vtable (glib_mem_profiler_table);
@@ -73,10 +242,11 @@ int main (int argc, char *argv[])
 
 		gtk_init (&argc, &argv);
 
-		bytes = radicals_load (&contents, filename, error);
-		g_debug ("radicals loaded");
-		arr = radicals_process (contents, bytes);
+		radicals = radicals_process (filename1);
 		g_debug ("radicals processed");
+
+		kanji = kanji_decomposition_process (filename2);
+		g_debug ("decompositions processed");
 
 		window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 		gtk_window_set_title (GTK_WINDOW (window), "Kanji");
@@ -87,17 +257,24 @@ int main (int argc, char *argv[])
 		gtk_table_set_row_spacings (GTK_TABLE (table), 2);
 		gtk_table_set_col_spacings (GTK_TABLE (table), 2);
 
+		p.label = gtk_label_new (NULL);
+
+		p.radicals = radicals;
+		p.kanji = kanji;
+
 		for (k = 0, i = 0; i < 14; i++)
 		{
 				for (j = 0; j < 50; j++)
 				{
-						if (g_array_index (arr, Radical, k).stroke == i + 1)
+						p.buttons[i][j] = NULL;
+						if (g_array_index (radicals, Radical, k).stroke == i + 1)
 						{
-								buttons[i][j] = gtk_button_new ();
-								gtk_button_set_label (GTK_BUTTON (buttons[i][j]), g_array_index (arr, Radical, k).rad);
-								gtk_table_attach_defaults (GTK_TABLE (table), buttons[i][j], i, i + 1, j, j + 1);
-								g_array_index (arr, Radical, k).x = i;
-								g_array_index (arr, Radical, k).x = j;
+								p.buttons[i][j] = gtk_toggle_button_new_with_label (g_array_index (radicals, Radical, k).rad);
+								g_object_set_data (G_OBJECT (p.buttons[i][j]), "index", GUINT_TO_POINTER (k));
+								g_signal_connect (G_OBJECT (p.buttons[i][j]), "toggled", G_CALLBACK (radical_button_toggled), (gpointer) &p);
+								gtk_table_attach_defaults (GTK_TABLE (table), p.buttons[i][j], i, i + 1, j, j + 1);
+								g_array_index (radicals, Radical, k).x = i;
+								g_array_index (radicals, Radical, k).y = j;
 								k++;
 						}
 						else
@@ -110,12 +287,13 @@ int main (int argc, char *argv[])
 		gtk_container_set_border_width (GTK_CONTAINER (scrolled), 5);
 		gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled), table);
 
-//		scrolled = gtk_viewport_new (NULL, NULL);
-//		gtk_container_add (GTK_CONTAINER (scrolled), table);
-
 		g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), NULL);
 
-		gtk_container_add (GTK_CONTAINER (window), scrolled);
+		vbox = gtk_vbox_new (FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (vbox), p.label, FALSE, FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (vbox), scrolled, TRUE, TRUE, 5);
+
+		gtk_container_add (GTK_CONTAINER (window), vbox);
 		gtk_widget_show_all (window);
 
 		gtk_main ();
