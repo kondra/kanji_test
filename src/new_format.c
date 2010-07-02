@@ -20,6 +20,7 @@ typedef struct
 
 typedef struct
 {
+		guint8 stroke;
 		gchar *kanji;
 		guint16 radicals2[20];
 		guint8 num;
@@ -28,6 +29,39 @@ typedef struct
 
 static GArray* radicals_process (gchar*, gsize);
 static gsize radicals_load (gchar**, const gchar*, GError*);
+
+static void strokes (GArray *kan, gchar *filename)
+{
+		FILE *f;
+		f = fopen (filename, "r");
+
+		gchar buf[10000];
+		gchar kanji[10];
+		gint i, j, k;
+
+		while (!feof (f))
+		{
+				fgets (buf, 10000, f);
+				if (buf[0] == '#')
+						continue;
+
+				for (i = 0; buf[i] != ' '; i++)
+						kanji[i] = buf[i];
+				kanji[i] = 0;
+
+				for (i = 0; buf[i] != 'S'; i++);
+				for (j = i; buf[j] != ' '; j++);
+				buf[j] = 0;
+				sscanf (buf + i + 1, "%d", &k);
+		
+				for (i = 0; i < kan->len; i++)
+				{
+						if (strcmp (kanji, g_array_index (kan, KanjiDecomposition, i).kanji) == 0)
+								g_array_index (kan, KanjiDecomposition, i).stroke = k;
+				}
+		}
+		fclose (f);
+}
 
 static void new_format (GArray *rad, GArray *kan)
 {
@@ -45,10 +79,6 @@ static void new_format (GArray *rad, GArray *kan)
 						{
 								if (strcmp (g_array_index (rad, Radical, j).rad, g_array_index (kan, KanjiDecomposition, i).radicals[k]) == 0)
 								{
-										if (i==58)
-										{
-												printf ("%d %s %s\n", j, g_array_index (rad, Radical, j).rad, g_array_index (kan, KanjiDecomposition, i).radicals[k]);
-										}
 										g_array_index (kan, KanjiDecomposition, i).radicals2[k] = j;
 //										g_debug ("%s -%d", g_array_index (kan, KanjiDecomposition, i).radicals[k], j);
 										break;
@@ -70,6 +100,7 @@ static void new_format (GArray *rad, GArray *kan)
 
 				fwrite (g_array_index (kan, KanjiDecomposition, i).kanji, sizeof (gchar), strlen (g_array_index (kan, KanjiDecomposition, i).kanji) + 1, f);
 //				g_debug ("1");
+				fwrite (&(g_array_index (kan, KanjiDecomposition, i).stroke), sizeof (guint8), 1, f);
 				fwrite (&(g_array_index (kan, KanjiDecomposition, i).num), sizeof (guint8), 1, f);
 //				g_debug ("2");
 				fwrite (g_array_index (kan, KanjiDecomposition, i).radicals2, sizeof (guint16), g_array_index (kan, KanjiDecomposition, i).num, f);
@@ -84,7 +115,7 @@ static void new_format (GArray *rad, GArray *kan)
 		f1 = fopen ("text", "wb");
 
 		int l;
-		guint8 num;
+		guint8 num, strk;
 		gchar buf[10];
 		guint16 rs[20];
 		fread (&l, sizeof (int), 1, f);
@@ -101,6 +132,7 @@ static void new_format (GArray *rad, GArray *kan)
 						j++;
 				}
 				fprintf (f1, "%s : ", buf);
+				fread (&strk, sizeof (guint8), 1, f);
 				fread (&num, sizeof (guint8), 1, f);
 				fread (rs, sizeof (guint16), num, f);
 				for (j = 0; j < num; j++){
@@ -162,7 +194,6 @@ static void new_format (GArray *rad, GArray *kan)
 		guint8 str;
 		guint16 rs1[2000], num1;
 		fread (&l, sizeof (int), 1, f);
-		g_debug ("%d", l);
 		for (i = 0; i < l; i++)
 		{
 				j = 0;
@@ -364,6 +395,7 @@ int main (int argc, char *argv[])
 		kanji = kanji_decomposition_process (contents2, bytes2);
 		g_debug ("decompositions processed");
 
+		strokes (kanji, "kanjidic");
 		new_format (radicals, kanji);
 
 		return 0;
