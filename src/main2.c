@@ -412,7 +412,7 @@ int main (int argc, char *argv[])
 
 		window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 		gtk_window_set_title (GTK_WINDOW (window), "Kanji");
-		gtk_widget_set_size_request (window, 900, 600);
+		gtk_widget_set_size_request (window, 900, 550);
 		gtk_container_set_border_width (GTK_CONTAINER (window), 10);
 
 		table = gtk_table_new (50, 14, FALSE);
