@@ -254,7 +254,7 @@ static void radical_button_toggled (GtkWidget *button, Widgets *p)
 								{
 										if (count == save)
 										{
-												g_array_index (result, guint16, l) = len;
+												g_array_index (result, guint16, len) = l;
 												len++;
 										}
 
