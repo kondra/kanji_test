@@ -4,18 +4,19 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <gtk/gtk.h>
+#include <gio/gio.h>
 
 #include "kanji.h"
 
 Kanji* kanji_create_empty (void)
 {
 		Kanji *k = (Kanji*) g_malloc0 (sizeof (Kanji));
-
 		return k;
 }
 
-Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *on, const gchar *meaning, 
-				int jlpt_level, int grade, int stroke, int radical_stroke, int num, gchar **writings, gchar **readings, gchar **meanings)
+Kanji* kanji_create (const gchar *kanji, const gchar *radical, const gchar *on, const gchar *meaning, 
+				gint jlpt_level, gint grade, gint kanji_stroke, gint radical_stroke,
+				gint num, gchar **writings, gchar **readings, gchar **meanings)
 {
 		int i;
 
@@ -23,33 +24,31 @@ Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *on, co
 
 		k->state = TRUE;
 
-		k->kun_writing = (gchar**) g_malloc0 (sizeof (gchar*) * num);
-		k->kun_reading = (gchar**) g_malloc0 (sizeof (gchar*) * num);
-		k->kun_meaning = (gchar**) g_malloc0 (sizeof (gchar*) * num);
+		k->word_writing = (gchar**) g_malloc0 (sizeof (gchar*) * num);
+		k->word_reading = (gchar**) g_malloc0 (sizeof (gchar*) * num);
+		k->word_meaning = (gchar**) g_malloc0 (sizeof (gchar*) * num);
 
 		for (i = 0; i < num; i++)
 		{
 				if (writings[i] == NULL)
-						k->kun_writing[i] = g_strdup (" ");
+						k->word_writing[i] = g_strdup (" ");
 				else
-						k->kun_writing[i] = g_strdup (writings[i]);
+						k->word_writing[i] = g_strdup (writings[i]);
 
 				if (readings[i] == NULL)
-						k->kun_reading[i] = g_strdup (" ");
+						k->word_reading[i] = g_strdup (" ");
 				else
-						k->kun_reading[i] = g_strdup (readings[i]);
+						k->word_reading[i] = g_strdup (readings[i]);
 
 				if (meanings[i] == NULL)
-						k->kun_meaning[i] = g_strdup (" ");
+						k->word_meaning[i] = g_strdup (" ");
 				else
-						k->kun_meaning[i] = g_strdup (meanings[i]);
+						k->word_meaning[i] = g_strdup (meanings[i]);
 		}
 
-		k->str = g_strdup_printf ("%s", str);
+		k->kanji = g_strdup_printf ("%s", kanji);
 		
 		k->radical = g_strdup_printf ("%s", radical);
-		
-//		k->kun = g_strdup_printf ("%s", kun);
 		
 		k->on = g_strdup_printf ("%s", on);
 		
@@ -60,7 +59,7 @@ Kanji* kanji_create (const gchar *str, const gchar *radical, const gchar *on, co
 
 		k->jlpt_level = jlpt_level;
 		k->grade = grade;
-		k->stroke = stroke;
+		k->kanji_stroke = kanji_stroke;
 		k->radical_stroke = radical_stroke;
 		k->num = num;
 
@@ -73,29 +72,36 @@ GArray* kanji_array_append (GArray *arr, Kanji *k)
 		return g_array_append_vals (arr, k, 1);
 }
 
+static void error (GArray *arr, const gchar *filename)
+{
+		g_warning ("kanji: unable to parse file %s (kanji_array_load)", filename);
+		kanji_array_free (arr);
+		arr = NULL;
+}
+
 GArray* kanji_array_load (const gchar *filename)
 {
 		FILE *f;
 		GArray *arr = kanji_array_create;
 		gchar b, *buf;
-		int pos, len, curpos, i;
+		gint pos, len, curpos, i;
 		struct stat statbuf;
-		unsigned int size;
+		guint size;
 		Kanji *k;
 
 		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
 		{
-				g_warning ("file %s not exist", filename);
+				g_warning ("File %s does not exist", filename);
 				return NULL;
 		}
 
 		if (lstat (filename, &statbuf))
-				g_error ("could not lstat %s: %s", filename, strerror (errno));
+				g_error ("Unable to lstat %s: %s", filename, strerror (errno));
 		size = statbuf.st_size;
 
 		if ((f = fopen (filename, "rb")) == NULL)
 		{
-				g_warning ("kanji dict file not exist");
+				g_warning ("File %s does not exist", filename);
 				return NULL;
 		}
 		
@@ -108,84 +114,65 @@ GArray* kanji_array_load (const gchar *filename)
 
 		while (pos + curpos < size)
 		{
-				fread (&(k->jlpt_level), sizeof (int), 1, f);
-				fread (&(k->grade), sizeof (int), 1, f);
-				fread (&(k->stroke), sizeof (int), 1, f);
-				fread (&(k->radical_stroke), sizeof (int), 1, f);
-				fread (&(k->num), sizeof (int), 1, f);
+				fread (&(k->jlpt_level), sizeof (gint), 1, f);
+				fread (&(k->grade), sizeof (gint), 1, f);
+				fread (&(k->kanji_stroke), sizeof (gint), 1, f);
+				fread (&(k->radical_stroke), sizeof (gint), 1, f);
+				fread (&(k->num), sizeof (gint), 1, f);
 				fread (&b, sizeof (gchar), 1, f);
 
 				//add more smart reading
 				curpos = ftell (f);
 				fread (buf, sizeof (gchar), 10000, f);
 
-				k->kun_writing = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
-				k->kun_reading = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
-				k->kun_meaning = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
+				k->word_writing = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
+				k->word_reading = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
+				k->word_meaning = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
 
 				for (pos = 0, i = 0; i < k->num; i++)
 				{
-						k->kun_writing[i] = g_strdup(buf + pos);
-						pos += strlen (k->kun_writing[i]) + 1;
+						k->word_writing[i] = g_strdup(buf + pos);
+						pos += strlen (k->word_writing[i]) + 1;
 
-						k->kun_reading[i] = g_strdup(buf + pos);
-						pos += strlen (k->kun_reading[i]) + 1;
+						k->word_reading[i] = g_strdup(buf + pos);
+						pos += strlen (k->word_reading[i]) + 1;
 
-						k->kun_meaning[i] = g_strdup(buf + pos);
-						pos += strlen (k->kun_meaning[i]) + 1;
+						k->word_meaning[i] = g_strdup(buf + pos);
+						pos += strlen (k->word_meaning[i]) + 1;
 				}
 
 				len = strlen (buf + pos);
-				k->str = g_strdup_printf ("%s", buf + pos);
-				if (k->str == NULL)
+				k->kanji = g_strdup (buf + pos);
+				if (k->kanji == NULL)
 				{
-						g_warning ("error parsing file %s", filename);
-						kanji_array_free (arr);
-						arr = NULL;
+						error (arr, filename);
 						break;
 				}
 				pos += len + 1;
-/*
 				len = strlen (buf + pos);
-				k->kun = g_strdup_printf ("%s", buf + pos);
-				if (k->kun == NULL)
-				{
-						g_warning ("error parsing file %s", filename);
-						kanji_array_free (arr);
-						arr = NULL;
-						break;
-				}
-				pos += len + 1;
-*/
-				len = strlen (buf + pos);
-				k->on = g_strdup_printf ("%s", buf + pos);
+
+				k->on = g_strdup (buf + pos);
 				if (k->on == NULL)
 				{
-						g_warning ("error parsing file %s", filename);
-						kanji_array_free (arr);
-						arr = NULL;
+						error (arr, filename);
 						break;
 				}
 				pos += len + 1;
 
 				len = strlen (buf + pos);
-				k->meaning = g_strdup_printf ("%s", buf + pos);
+				k->meaning = g_strdup (buf + pos);
 				if (k->meaning == NULL)
 				{
-						g_warning ("error parsing file %s", filename);
-						kanji_array_free (arr);
-						arr = NULL;
+						error (arr, filename);
 						break;
 				}
 				pos += len + 1;
 				
 				len = strlen (buf + pos);
-				k->radical = g_strdup_printf ("%s", buf + pos);
+				k->radical = g_strdup (buf + pos);
 				if (k->radical == NULL)
 				{
-						g_warning ("error parsing file %s", filename);
-						kanji_array_free (arr);
-						arr = NULL;
+						error (arr, filename);
 						break;
 				}
 				pos += len + 1;
@@ -197,6 +184,7 @@ GArray* kanji_array_load (const gchar *filename)
 
 		g_free (buf);
 		g_free (k);
+
 		fclose (f);
 
 		return arr;
@@ -204,13 +192,19 @@ GArray* kanji_array_load (const gchar *filename)
 
 void kanji_array_save (const gchar *filename, GArray *arr)
 {
-		FILE *f;
-		int i, j;
+		gint i, j;
 		gchar b = 0;
 		Kanji *k;
 
-		if ((f = fopen (filename, "wb")) == NULL)
-				g_error ("can not open file");
+		GFile *f;
+		GFileOutputStream *out;
+		GError *error = NULL;
+
+		f = g_file_new_for_path (filename);
+
+		out = g_file_replace (f, NULL, FALSE, G_FILE_CREATE_NONE, NULL, &error);
+		if (error != NULL)
+				g_error ("Unable to write file: %s\n", error->message);
 
 		k = &g_array_index (arr, Kanji, i = 0);
 		while (i < arr->len)
@@ -221,64 +215,52 @@ void kanji_array_save (const gchar *filename, GArray *arr)
 						continue;
 				}
 
-				fwrite (&(k->jlpt_level), sizeof (int), 1, f);
-				fwrite (&(k->grade), sizeof (int), 1, f);
-				fwrite (&(k->stroke), sizeof (int), 1, f);
-				fwrite (&(k->radical_stroke), sizeof (int), 1, f);
-				fwrite (&(k->num), sizeof (int), 1, f);
-				fwrite (&b, sizeof (gchar), 1, f);
+				//add error checking
+				g_output_stream_write (G_OUTPUT_STREAM (out), &(k->jlpt_level), sizeof (gint), NULL, NULL);
+				g_output_stream_write (G_OUTPUT_STREAM (out), &(k->grade), sizeof (gint), NULL, NULL);
+				g_output_stream_write (G_OUTPUT_STREAM (out), &(k->kanji_stroke), sizeof (gint), NULL, NULL);
+				g_output_stream_write (G_OUTPUT_STREAM (out), &(k->radical_stroke), sizeof (gint), NULL, NULL);
+				g_output_stream_write (G_OUTPUT_STREAM (out), &(k->num), sizeof (gint), NULL, NULL);
+				g_output_stream_write (G_OUTPUT_STREAM (out), &b, sizeof (gchar), NULL, NULL);
 
 				for (j = 0; j < k->num; j++)
 				{
-						fwrite (k->kun_writing[j], sizeof (gchar), strlen (k->kun_writing[j]) + 1, f);
-						fwrite (k->kun_reading[j], sizeof (gchar), strlen (k->kun_reading[j]) + 1, f);
-						fwrite (k->kun_meaning[j], sizeof (gchar), strlen (k->kun_meaning[j]) + 1, f);
+						g_output_stream_write (G_OUTPUT_STREAM (out), k->word_writing[j], sizeof (gchar) * (strlen (k->word_writing[j]) + 1), NULL, NULL);
+						g_output_stream_write (G_OUTPUT_STREAM (out), k->word_reading[j], sizeof (gchar) * (strlen (k->word_reading[j]) + 1), NULL, NULL);
+						g_output_stream_write (G_OUTPUT_STREAM (out), k->word_meaning[j], sizeof (gchar) * (strlen (k->word_meaning[j]) + 1), NULL, NULL);
 				}
 
-				fwrite (k->str, sizeof (gchar), strlen (k->str) + 1, f);
-				fwrite (k->on, sizeof (gchar), strlen (k->on) + 1, f);
-				fwrite (k->meaning, sizeof (gchar), strlen (k->meaning) + 1, f);
-				fwrite (k->radical, sizeof (gchar), strlen (k->radical) + 1, f);
+				g_output_stream_write (G_OUTPUT_STREAM (out), k->kanji, sizeof (gchar) * (strlen (k->kanji) + 1), NULL, NULL);
+				g_output_stream_write (G_OUTPUT_STREAM (out), k->on, sizeof (gchar) * (strlen (k->on) + 1), NULL, NULL);
+				g_output_stream_write (G_OUTPUT_STREAM (out), k->meaning, sizeof (gchar) * (strlen (k->meaning) + 1), NULL, NULL);
+				g_output_stream_write (G_OUTPUT_STREAM (out), k->radical, sizeof (gchar) * (strlen (k->radical) + 1), NULL, NULL);
 
 				k = &g_array_index (arr, Kanji, ++i);
 		}
 
-		fclose (f);
+		g_output_stream_close (G_OUTPUT_STREAM (out), NULL, NULL);
 }
 
 void kanji_array_free (GArray *arr)
 {
-	/*	int i;
-		Kanji *k;
-		
-		k = &g_array_index (arr, Kanji, i = 0);
-		while (!kanji_is_null (k))
-		{
-				kanji_free (k);
-				k = &g_array_index (arr, Kanji, ++i);
-		}
-	*/
 		g_array_free (arr, TRUE);
 }
 
 void kanji_free (Kanji *k)
 {
-		int i;
+		gint i;
 
-		g_free (k->str);
-		g_free (k->kun);
+		g_free (k->kanji);
 		g_free (k->on);
 		g_free (k->meaning);
 		g_free (k->radical);
 
 		for (i = 0; i < k->num; i++)
 		{
-				g_free (k->kun_reading[i]);
-				g_free (k->kun_writing[i]);
-				g_free (k->kun_meaning[i]);
+				g_free (k->word_reading[i]);
+				g_free (k->word_writing[i]);
+				g_free (k->word_meaning[i]);
 		}
 
 		k->state = FALSE;
-
-//		g_free (k);
 }
