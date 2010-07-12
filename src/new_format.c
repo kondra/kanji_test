@@ -6,38 +6,38 @@
 
 typedef struct
 {
-		int stroke;
-		int x, y; // coordinates in buttons table
 		gchar *rad;
-		gboolean state;
 
-		guint8 stroke2;
-		guint16 num;
-		guint16 *kanji2;
+		int stroke;
+		guint8 stroke_new;
 
 		GArray *kanji;
+		guint16 num;
+		guint16 *kanji_new;
 } Radical;
 
 typedef struct
 {
-		guint8 stroke;
 		gchar *kanji;
-		guint16 radicals2[20];
+		guint8 stroke;
 		guint8 num;
 		gchar *radicals[20];
+		guint16 radicals_new[20];
 } KanjiDecomposition;
 
 static GArray* radicals_process (gchar*, gsize);
 static gsize radicals_load (gchar**, const gchar*, GError*);
 
+//gets strokes from kanjidic file
 static void strokes (GArray *kan, gchar *filename)
 {
 		FILE *f;
-		f = fopen (filename, "r");
 
 		gchar buf[10000];
 		gchar kanji[10];
 		gint i, j, k;
+
+		f = fopen (filename, "r");
 
 		while (!feof (f))
 		{
@@ -51,73 +51,65 @@ static void strokes (GArray *kan, gchar *filename)
 
 				for (i = 0; buf[i] != 'S'; i++);
 				for (j = i; buf[j] != ' '; j++);
+
 				buf[j] = 0;
 				sscanf (buf + i + 1, "%d", &k);
 		
 				for (i = 0; i < kan->len; i++)
-				{
 						if (strcmp (kanji, g_array_index (kan, KanjiDecomposition, i).kanji) == 0)
 								g_array_index (kan, KanjiDecomposition, i).stroke = k;
-				}
 		}
+
 		fclose (f);
 }
 
-static void new_format (GArray *rad, GArray *kan)
+static void kanji_index_build (GArray *rad, GArray *kan)
 {
-		int i, j;
+		guint i, j;
 		guint16 k;
 
-// * building index
-//		g_debug ("%d", kan->len);
 		for (i = 0; i < kan->len; i++)
-		{
-//				g_debug ("\n%s - %d", g_array_index (kan, KanjiDecomposition, i).kanji, g_array_index (kan, KanjiDecomposition, i).num);
 				for (k = 0; k < g_array_index (kan, KanjiDecomposition, i).num; k++)
-				{
 						for (j = 0; j < rad->len; j++)
-						{
 								if (strcmp (g_array_index (rad, Radical, j).rad, g_array_index (kan, KanjiDecomposition, i).radicals[k]) == 0)
 								{
-										g_array_index (kan, KanjiDecomposition, i).radicals2[k] = j;
-//										g_debug ("%s -%d", g_array_index (kan, KanjiDecomposition, i).radicals[k], j);
+										g_array_index (kan, KanjiDecomposition, i).radicals_new[k] = j;
 										break;
 								}
-						}
-				}
-//				if (i == 2)
-//						exit (0);
-		}
+}
 
-		//writind index file
+static void kanji_index_save (GArray *kan)
+{
 		FILE *f;
+		guint i;
+
 		f = fopen ("kindex", "wb");
 		fwrite (&(kan->len), sizeof (int), 1, f);
 		for (i = 0; i < kan->len; i++)
 		{
-//				g_debug ("%s", g_array_index (kan, KanjiDecomposition, i).kanji);
-//				g_debug ("%d", strlen (g_array_index (kan, KanjiDecomposition, i).kanji));
-
 				fwrite (g_array_index (kan, KanjiDecomposition, i).kanji, sizeof (gchar), strlen (g_array_index (kan, KanjiDecomposition, i).kanji) + 1, f);
-//				g_debug ("1");
 				fwrite (&(g_array_index (kan, KanjiDecomposition, i).stroke), sizeof (guint8), 1, f);
 				fwrite (&(g_array_index (kan, KanjiDecomposition, i).num), sizeof (guint8), 1, f);
-//				g_debug ("2");
-				fwrite (g_array_index (kan, KanjiDecomposition, i).radicals2, sizeof (guint16), g_array_index (kan, KanjiDecomposition, i).num, f);
-//				g_debug ("3");
+				fwrite (g_array_index (kan, KanjiDecomposition, i).radicals_new, sizeof (guint16), g_array_index (kan, KanjiDecomposition, i).num, f);
 		}
+		
 		fclose (f);
+}
 
-
-// * test  reading
-		FILE *f1;
-		f = fopen ("kindex", "rb");
-		f1 = fopen ("text", "wb");
+//parses binary output and prints kanji index in text format
+static void kanji_index_test ()
+{
+		FILE *f, *ft;
 
 		int l;
+		guint i, j;
 		guint8 num, strk;
-		gchar buf[10];
 		guint16 rs[20];
+		gchar buf[10];
+
+		f = fopen ("kindex", "rb");
+		ft = fopen ("text", "wb");
+
 		fread (&l, sizeof (int), 1, f);
 		for (i = 0; i < l; i++)
 		{
@@ -131,68 +123,73 @@ static void new_format (GArray *rad, GArray *kan)
 
 						j++;
 				}
-				fprintf (f1, "%s : ", buf);
+				fprintf (ft, "%s : ", buf);
+
 				fread (&strk, sizeof (guint8), 1, f);
 				fread (&num, sizeof (guint8), 1, f);
 				fread (rs, sizeof (guint16), num, f);
-				for (j = 0; j < num; j++){
-						fprintf (f1, "%d ", rs[j]);
-				}
-				fprintf (f1, "\n");
+
+				for (j = 0; j < num; j++)
+						fprintf (ft, "%d ", rs[j]);
+				fprintf (ft, "\n");
 		}
 
-// build radical index
+		fclose (f);
+		fclose (ft);
+}
+
+static void radical_index_build (GArray *rad, GArray *kan)
+{
+		guint i, j;
+		guint16 k;
 
 		for (i = 0; i < rad->len; i++)
 		{
 				g_array_index (rad, Radical, i).num = g_array_index (rad, Radical, i).kanji->len;
-				g_array_index (rad, Radical, i).kanji2 = (guint16*) g_malloc0 (sizeof (guint16) * g_array_index (rad, Radical, i).num);
+				g_array_index (rad, Radical, i).kanji_new = (guint16*) g_malloc0 (sizeof (guint16) * g_array_index (rad, Radical, i).num);
 				for (j = 0; j < g_array_index (rad, Radical, i).kanji->len; j++)
-				{
 						for (k = 0; k < kan->len; k++)
-						{
 								if (g_utf8_collate (g_array_index (g_array_index (rad, Radical, i).kanji, gchar*, j), g_array_index (kan, KanjiDecomposition, k).kanji) == 0)
 								{
-										g_array_index (rad, Radical, i).kanji2[j] = k;
-//										g_debug ("%d", g_array_index (rad, Radical, i).kanji2[j]);
-//										g_debug ("%s -%d", g_array_index (kan, KanjiDecomposition, i).radicals[k], j);
+										g_array_index (rad, Radical, i).kanji_new[j] = k;
 										break;
 								}
-						}
-				}
-			//	for (j = 0; j < g_array_index (rad, Radical, i).num; j++)
-			//			g_debug ("%d", g_array_index (rad, Radical, i).kanji2[j]);
-//				g_array_index (rad, Radical, i).num = j;
-				//g_debug ("%d - %d", i, j);
 		}
+}
 
-//		write radial index file
+static void radical_index_save (GArray *rad)
+{
+		FILE *f;
+
+		guint i;
+
 		f = fopen ("rindex", "wb");
+
 		fwrite (&(rad->len), sizeof (int), 1, f);
 		for (i = 0; i < rad->len; i++)
 		{
-//				g_debug ("%s", g_array_index (kan, KanjiDecomposition, i).kanji);
-//				g_debug ("%d", strlen (g_array_index (kan, KanjiDecomposition, i).kanji));
-
 				fwrite (g_array_index (rad, Radical, i).rad, sizeof (gchar), strlen (g_array_index (rad, Radical, i).rad) + 1, f);
-//				g_debug ("1");
-				g_array_index (rad, Radical, i).stroke2 = (guint8) g_array_index (rad, Radical, i).stroke;
-				fwrite (&(g_array_index (rad, Radical, i).stroke2), sizeof (guint8), 1, f);
+				g_array_index (rad, Radical, i).stroke_new = (guint8) g_array_index (rad, Radical, i).stroke;
+				fwrite (&(g_array_index (rad, Radical, i).stroke_new), sizeof (guint8), 1, f);
 				fwrite (&(g_array_index (rad, Radical, i).num), sizeof (guint16), 1, f);
-//				g_debug ("%d", g_array_index (rad, Radical, i).num);
-//				g_debug ("2");
-				fwrite (g_array_index (rad, Radical, i).kanji2, sizeof (guint16), g_array_index (rad, Radical, i).num, f);
-		//		for (j = 0; j < g_array_index (rad, Radical, i).num; j++)
-		//				g_debug ("%d", g_array_index (rad, Radical, i).kanji2[j]);
-//				g_debug ("3");
+				fwrite (g_array_index (rad, Radical, i).kanji_new, sizeof (guint16), g_array_index (rad, Radical, i).num, f);
 		}
-		fclose (f);
 
-//		FILE *f;
-		f = fopen ("rindex", "rb");
-		f1 = fopen ("text1", "wb");
+		fclose (f);
+}
+
+static void radical_index_test ()
+{
+		FILE *f;
+
+		int l;
+		guint i, j;
 		guint8 str;
 		guint16 rs1[2000], num1;
+
+		f = fopen ("rindex", "rb");
+		ft = fopen ("text1", "wb");
+
 		fread (&l, sizeof (int), 1, f);
 		for (i = 0; i < l; i++)
 		{
@@ -206,19 +203,30 @@ static void new_format (GArray *rad, GArray *kan)
 
 						j++;
 				}
-				fprintf (f1, "%s : ", buf);
-				fread (&str, sizeof (guint8), 1, f);
-				fprintf (f1, "%d ", str);
-				fread (&num1, sizeof (guint16), 1, f);
+				fprintf (ft, "%s : ", buf);
 
+				fread (&str, sizeof (guint8), 1, f);
+				fprintf (ft, "%d ", str);
+				
+				fread (&num1, sizeof (guint16), 1, f);
 				fread (rs1, sizeof (guint16), num1, f);
-//				for (j = 0; j < num1; j++){
-//						fprintf (f1, "%d ", rs1[j]);
-//				}
-				fprintf (f1, "\n");
+
+				fprintf (ft, "\n");
 		}
-		fclose (f1);
-		exit (0);
+
+		fclose (f);
+		fclose (ft);
+}
+
+static void new_format (GArray *rad, GArray *kan)
+{
+		kanji_index_build (rad, kan);
+		kanji_index_save (kan);
+//		kanji_index_test ();
+
+		radical_index_build (rad, kan);
+		radical_index_save (rad);
+//		radical_index_test ();
 }
 
 static gsize radicals_load (gchar **contents, const gchar *filename, GError *error)
@@ -226,12 +234,12 @@ static gsize radicals_load (gchar **contents, const gchar *filename, GError *err
 		gsize bytes;
 
 		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
-				g_warning ("Error: file %s does not exist", filename);
+				g_error ("Error: file %s does not exist", filename);
 
 		g_file_get_contents (filename, contents, &bytes, &error);
 		
 		if (error != NULL)
-				g_warning ("Error: radicals_load function");
+				g_error ("Error: radicals_load function");
 
 		return bytes;
 }
@@ -290,23 +298,22 @@ static GArray* radicals_process (gchar *contents, gsize bytes)
 						k++;
 				}
 		}
-		arr->len = k ;
+		arr->len = k;
 
 		return arr;
 }
-
 
 static gsize kanji_decomposition_load (gchar **contents, const gchar *filename, GError *error)
 {
 		gsize bytes;
 
 		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
-				g_warning ("Error: file %s does not exist", filename);
+				g_error ("Error: file %s does not exist", filename);
 
 		g_file_get_contents (filename, contents, &bytes, &error);
 		
 		if (error != NULL)
-				g_warning ("Error: radicals_load function");
+				g_error ("Error: radicals_load function");
 
 		return bytes;
 }
@@ -368,34 +375,26 @@ static GArray* kanji_decomposition_process (gchar *contents, gsize bytes)
 
 int main (int argc, char *argv[])
 {
-		//int i, j, k;
-
-		const gchar filename1[] = "radkfile";
-		const gchar filename2[] = "kradfile";
-		gchar *contents1 = NULL;
-		gchar *contents2 = NULL;
-		gsize bytes1, bytes2;
-		GError *error1 = NULL;
-		GError *error2 = NULL;
+		GError *error1 = NULL, *error2 = NULL;;
 		GArray *radicals, *kanji;
 
-//		Memory Profiling
-//		g_mem_set_vtable (glib_mem_profiler_table);
-//		g_atexit (g_mem_profile);
+		gchar *contents1 = NULL, *contents2 = NULL;;
+		gsize bytes1, bytes2;
 
 		gtk_init (&argc, &argv);
 
-		bytes1 = radicals_load (&contents1, filename1, error1);
-		g_debug ("radicals loaded");
+		bytes1 = radicals_load (&contents1, "radkfile", error1);
+		g_message ("Radicals loaded");
 		radicals = radicals_process (contents1, bytes1);
-		g_debug ("radicals processed");
+		g_message ("Radicals processed");
 
-		bytes2 = kanji_decomposition_load (&contents2, filename2, error2);
-		g_debug ("decompositions loaded");
+		bytes2 = kanji_decomposition_load (&contents2, "kradfile", error2);
+		g_message ("Decompositions loaded");
 		kanji = kanji_decomposition_process (contents2, bytes2);
-		g_debug ("decompositions processed");
+		g_message ("Decompositions processed");
 
 		strokes (kanji, "kanjidic");
+		g_message ("Strokes information loaded");
 		new_format (radicals, kanji);
 
 		return 0;
