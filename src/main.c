@@ -6,13 +6,13 @@
 #include "add_kanji.h"
 #include "view_kanji.h"
 
-static void button2_clicked (GtkButton*, GArray*);
-static void destroy (GtkWidget*, GArray*);
+//static void button2_clicked (GtkButton*, GArray*);
+//static void destroy (GtkWidget*, GArray*);
 
 int main (int argc, char *argv[])
 {
-		GtkWidget *window, *button2;
-		GtkWidget *vbox;
+//		GtkWidget *window, *button2;
+//		GtkWidget *vbox;
 		GArray *arr;
 
 //		Memory Profiling
@@ -25,27 +25,33 @@ int main (int argc, char *argv[])
 
 		gtk_init (&argc, &argv);
 
-		window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-		gtk_window_set_title (GTK_WINDOW (window), "KanjiTest");
-		gtk_container_set_border_width (GTK_CONTAINER (window), 10);
+//		window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+//		gtk_window_set_title (GTK_WINDOW (window), "KanjiTest");
+//		gtk_container_set_border_width (GTK_CONTAINER (window), 10);
+//
+//		g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), (gpointer) arr);
+//
+//		button2 = gtk_button_new_with_mnemonic ("_View Kanji List");
+//
+//		g_signal_connect (G_OBJECT (button2), "clicked", G_CALLBACK (button2_clicked), (gpointer) arr);
+//
+//		vbox = gtk_vbox_new (FALSE, 5);
+//
+//		gtk_box_pack_start_defaults (GTK_BOX (vbox), button2);
+//
+//		gtk_container_add (GTK_CONTAINER (window), vbox);
+//		gtk_widget_show_all (window);
 
-		g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), (gpointer) arr);
+		if (arr == NULL)
+				return -1;
 
-		button2 = gtk_button_new_with_mnemonic ("_View Kanji List");
+		kanji_list_view (arr);
 
-		g_signal_connect (G_OBJECT (button2), "clicked", G_CALLBACK (button2_clicked), (gpointer) arr);
-
-		vbox = gtk_vbox_new (FALSE, 5);
-
-		gtk_box_pack_start_defaults (GTK_BOX (vbox), button2);
-
-		gtk_container_add (GTK_CONTAINER (window), vbox);
-		gtk_widget_show_all (window);
-
-		gtk_main ();
+		kanji_array_save ("kanjidict", arr);
+		//gtk_main ();
 		return 0;
 }
-
+/*
 static void button2_clicked (GtkButton *button, GArray *arr)
 {
 		if (arr == NULL)
@@ -71,4 +77,4 @@ static void destroy (GtkWidget *window, GArray *arr)
 		}
 
 		gtk_main_quit ();
-}
+}*/
