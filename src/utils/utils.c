@@ -38,7 +38,6 @@ static GArray* transform (GArray *arr)
 								{
 										buf[i] = 0;
 										writing[k] = g_strdup_printf ("%s", p);
-				//						printf ("Writing: %s\n", p);
 										buf[i] = ' ';
 										state = 1;
 								}
@@ -51,7 +50,6 @@ static GArray* transform (GArray *arr)
 								{
 										buf[i] = 0;
 										reading[k] = g_strdup_printf ("%s", p);
-				//						printf ("Reading: %s\n", p);
 										buf[i] = ']';
 										state = 3;
 								}
@@ -84,7 +82,6 @@ static GArray* transform (GArray *arr)
 */
 						}
 						k++;
-				//		printf ("\n");
 				}
 				num = k;
 				tmp = kanji_create (writing[0], " ", " ", " ", 5, 1, 1, 1, num, writing, reading, meaning);
