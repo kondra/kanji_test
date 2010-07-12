@@ -35,12 +35,12 @@ typedef struct
 		GtkTextBuffer *buffer;
 		GtkWidget *buttons[14][50];
 		GtkWidget *spin_min, *spin_max;
-} Widgets;
+} Data;
 
 static void destroy (GtkWidget*, gpointer);
-static void radical_button_toggled (GtkWidget*, Widgets*);
-static void clear_button_pressed (GtkWidget*, Widgets*);
-static void stroke_range_changed (GtkWidget*, Widgets*);
+static void radical_button_toggled (GtkWidget*, Data*);
+static void clear_button_pressed (GtkWidget*, Data*);
+static void stroke_range_changed (GtkWidget*, Data*);
 static GArray* radicals_process (const gchar*);
 static GArray* kanji_decomposition_process (const gchar*);
 
@@ -48,11 +48,11 @@ static GArray* radicals_process (const gchar *filename)
 {
 		GArray *arr;
 		FILE *f;
-		f = fopen (filename, "rb");
 
 		gchar buf[20];
-
 		int l, i, j;
+
+		f = fopen (filename, "rb");
 
 		fread (&l, sizeof (int), 1, f);
 		arr = g_array_sized_new (TRUE, TRUE, sizeof (Radical), l);
@@ -79,6 +79,7 @@ static GArray* radicals_process (const gchar *filename)
 				g_array_index (arr, Radical, i).kanji = (guint16*) g_malloc0 (sizeof (guint16) * g_array_index (arr, Radical, i).num);
 				fread (g_array_index (arr, Radical, i).kanji, sizeof (guint16), g_array_index (arr, Radical, i).num, f);
 		}
+
 		fclose (f);
 
 		return arr;
@@ -89,11 +90,11 @@ static GArray* kanji_decomposition_process (const gchar *filename)
 {
 		GArray *arr;
 		FILE *f;
-		f = fopen (filename, "rb");
 
 		gchar buf[20];
-
 		int l, i, j;
+
+		f = fopen (filename, "rb");
 
 		fread (&l, sizeof (int), 1, f);
 		arr = g_array_sized_new (TRUE, TRUE, sizeof (KanjiDecomposition), l);
@@ -120,6 +121,7 @@ static GArray* kanji_decomposition_process (const gchar *filename)
 				g_array_index (arr, KanjiDecomposition, i).radicals = (guint16*) g_malloc0 (sizeof (guint16) * g_array_index (arr, KanjiDecomposition, i).num);
 				fread (g_array_index (arr, KanjiDecomposition, i).radicals, sizeof (guint16), g_array_index (arr, KanjiDecomposition, i).num, f);
 		}
+		
 		fclose (f);
 
 		return arr;
@@ -127,7 +129,7 @@ static GArray* kanji_decomposition_process (const gchar *filename)
 
 gint compare (gconstpointer a, gconstpointer b, gpointer k)
 {
-		GArray *kanji = (GArray*) k;
+		register GArray *kanji = (GArray*) k;
 		if (g_array_index (kanji, KanjiDecomposition, *(guint16*)a).stroke < g_array_index (kanji, KanjiDecomposition, *(guint16*)b).stroke)
 				return -1;
 		if (g_array_index (kanji, KanjiDecomposition, *(guint16*)a).stroke > g_array_index (kanji, KanjiDecomposition, *(guint16*)b).stroke)
@@ -135,7 +137,7 @@ gint compare (gconstpointer a, gconstpointer b, gpointer k)
 		return 0;
 }
 
-static void radical_button_toggled (GtkWidget *button, Widgets *p)
+static void radical_button_toggled (GtkWidget *button, Data *p)
 {
 		GArray *radicals = p->radicals;
 		GArray *kanji = p->kanji;
@@ -303,10 +305,11 @@ static void radical_button_toggled (GtkWidget *button, Widgets *p)
 		}
 }
 
-static void clear_button_pressed (GtkWidget *button, Widgets *p)
+static void clear_button_pressed (GtkWidget *button, Data *p)
 {
 		GtkTextIter start, end;
 		guint i, x, y;
+
 		p->cleared = TRUE;
 		for (i = 0; i < p->kanji->len; i++)
 				g_array_index (p->kanji, KanjiDecomposition, i).state = 1;
@@ -325,7 +328,7 @@ static void clear_button_pressed (GtkWidget *button, Widgets *p)
 		gtk_text_buffer_delete (p->buffer, &start, &end);
 }
 
-static void stroke_range_changed (GtkWidget *spin, Widgets *p)
+static void stroke_range_changed (GtkWidget *spin, Data *p)
 {
 		GtkTextIter start, end;
 
@@ -382,12 +385,21 @@ static void stroke_range_changed (GtkWidget *spin, Widgets *p)
 		gtk_text_buffer_get_start_iter (p->buffer, &start);
 		gtk_text_buffer_insert_with_tags_by_name (p->buffer, &start, buf, -1, "kanji_font", NULL);
 }
+
+static void destroy (GtkWidget *window, gpointer data)
+{
+		gtk_main_quit ();
+}
+
 int main (int argc, char *argv[])
 {
 		GtkWidget *window;
-		GtkWidget *table, *scrolled1, *scrolled2, *textview;
-		GtkWidget *vbox, *hbox1, *hbox2, *reset_button;
-		GtkWidget *label1, *label2;
+		GtkWidget *table;
+		GtkWidget *scrolled_table, *scrolled_text;
+		GtkWidget *textview;
+		GtkWidget *vbox;
+		GtkWidget *hbox1, *hbox2;
+
 		GtkTextBuffer *buffer;
 
 		guint16 i, j;
@@ -395,8 +407,10 @@ int main (int argc, char *argv[])
 
 		const gchar filename1[] = "rindex";
 		const gchar filename2[] = "kindex";
+
 		GArray *radicals, *kanji;
-		Widgets p;
+
+		Data p;
 
 //		Memory Profiling
 //		g_mem_set_vtable (glib_mem_profiler_table);
@@ -405,25 +419,23 @@ int main (int argc, char *argv[])
 		gtk_init (&argc, &argv);
 
 		radicals = radicals_process (filename1);
-		g_debug ("radicals processed");
+		g_message ("radicals processed");
 
 		kanji = kanji_decomposition_process (filename2);
-		g_debug ("decompositions processed");
+		g_message ("decompositions processed");
 
 		window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 		gtk_window_set_title (GTK_WINDOW (window), "Kanji");
-		gtk_widget_set_size_request (window, 900, 550);
+		gtk_widget_set_size_request (window, 900, 500);
 		gtk_container_set_border_width (GTK_CONTAINER (window), 10);
 
 		table = gtk_table_new (50, 14, FALSE);
 		gtk_table_set_row_spacings (GTK_TABLE (table), 2);
 		gtk_table_set_col_spacings (GTK_TABLE (table), 2);
 
-		//p.label = gtk_label_new (NULL);
-		//gtk_label_set_selectable (GTK_LABEL (p.label), TRUE);
-
 		textview = gtk_text_view_new ();
 		gtk_text_view_set_editable (GTK_TEXT_VIEW (textview), FALSE);
+		gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (textview), FALSE);
 		buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
 		gtk_text_buffer_create_tag (buffer, "kanji_font", "font", "20", NULL);
 
@@ -455,23 +467,23 @@ int main (int argc, char *argv[])
 				}
 		}
 
-		scrolled1 = gtk_scrolled_window_new (NULL, NULL);
-		gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled1), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-		gtk_container_set_border_width (GTK_CONTAINER (scrolled1), 5);
-		gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled1), table);
+		scrolled_table = gtk_scrolled_window_new (NULL, NULL);
+		gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_table), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+		gtk_container_set_border_width (GTK_CONTAINER (scrolled_table), 5);
+		gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled_table), table);
 
-		scrolled2 = gtk_scrolled_window_new (NULL, NULL);
-		gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled2), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-		gtk_container_set_border_width (GTK_CONTAINER (scrolled2), 5);
-		gtk_container_add (GTK_CONTAINER (scrolled2), textview);
+		scrolled_text = gtk_scrolled_window_new (NULL, NULL);
+		gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_text), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+		gtk_container_set_border_width (GTK_CONTAINER (scrolled_text), 5);
+		gtk_container_add (GTK_CONTAINER (scrolled_text), textview);
 
 		g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), NULL);
 
-		reset_button = gtk_button_new_from_stock (GTK_STOCK_CLEAR);
+		GtkWidget* reset_button = gtk_button_new_from_stock (GTK_STOCK_CLEAR);
 		g_signal_connect (G_OBJECT (reset_button), "clicked", G_CALLBACK (clear_button_pressed), (gpointer) &p);
 
-		label1 = gtk_label_new ("Stroke range:");
-		label2 = gtk_label_new ("-");
+		GtkWidget* label1 = gtk_label_new ("Stroke range:");
+		GtkWidget* label2 = gtk_label_new ("-");
 		p.spin_min = gtk_spin_button_new_with_range (1, 30, 1);
 		g_signal_connect (G_OBJECT (p.spin_min), "value-changed", G_CALLBACK (stroke_range_changed), (gpointer) &p);
 		p.spin_max = gtk_spin_button_new_with_range (1, 30, 1);
@@ -486,12 +498,11 @@ int main (int argc, char *argv[])
 		gtk_box_pack_start (GTK_BOX (hbox1), p.spin_max, FALSE, FALSE, 5);
 
 		hbox2 = gtk_hbox_new (FALSE, 5);
-		gtk_box_pack_start (GTK_BOX (hbox2), scrolled1, TRUE, TRUE, 5);
-		gtk_box_pack_start (GTK_BOX (hbox2), scrolled2, TRUE, TRUE, 5);
+		gtk_box_pack_start (GTK_BOX (hbox2), scrolled_table, TRUE, TRUE, 5);
+		gtk_box_pack_start (GTK_BOX (hbox2), scrolled_text, TRUE, TRUE, 5);
 
 		vbox = gtk_vbox_new (FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (vbox), hbox1, FALSE, FALSE, 5);
-//		gtk_box_pack_start (GTK_BOX (vbox), p.label, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (vbox), hbox2, TRUE, TRUE, 5);
 
 		gtk_container_add (GTK_CONTAINER (window), vbox);
@@ -499,9 +510,4 @@ int main (int argc, char *argv[])
 
 		gtk_main ();
 		return 0;
-}
-
-static void destroy (GtkWidget *window, gpointer data)
-{
-		gtk_main_quit ();
 }
