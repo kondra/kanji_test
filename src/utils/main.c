@@ -1,3 +1,4 @@
+//this program looks throw edict file and saves articles with one kanji and hiragana
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,18 +62,15 @@ int main (int argc, char *argv[])
 								p = str;
 								flag = TRUE;
 								l = g_utf8_strlen (p, 100);
-//								printf ("%d\n", l);
 								cnt = 0;
 								while (cnt < l)
 								{
-			//							printf ("%s\n", p);
 										uc = g_utf8_get_char (p);
 										if (cnt == 0 && uc != arr[j])
 										{
 												flag = FALSE;
 												break;
 										}
-//										g_unichar_to_utf8 (uc, obuf);
 										if (g_utf8_strchr (hiragana, len, uc) == NULL && uc != arr[j])
 										{
 												flag = FALSE;
@@ -84,13 +82,10 @@ int main (int argc, char *argv[])
 								if (flag == TRUE && l != 0)
 								{
 										fprintf (files[j], "%s\n", buf);
-//										printf ("%s\n", buf);
 										g ++;
 								}
 						}
 				}
-//				if (g >= 300)
-//						break;
 		}
 
 		for (j = 0; j < i; j++)
