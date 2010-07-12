@@ -46,16 +46,16 @@ Kanji* kanji_create (const gchar *kanji, const gchar *radical, const gchar *on, 
 						k->word_meaning[i] = g_strdup (meanings[i]);
 		}
 
-		k->kanji = g_strdup_printf ("%s", kanji);
+		k->kanji = g_strdup (kanji);
 		
-		k->radical = g_strdup_printf ("%s", radical);
+		k->radical = g_strdup (radical);
 		
-		k->on = g_strdup_printf ("%s", on);
+		k->on = g_strdup (on);
 		
 		if (meaning == NULL)
-				k->meaning = g_strdup_printf (" ");
+				k->meaning = g_strdup (" ");
 		else
-				k->meaning = g_strdup_printf ("%s", meaning);
+				k->meaning = g_strdup (meaning);
 
 		k->jlpt_level = jlpt_level;
 		k->grade = grade;
