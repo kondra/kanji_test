@@ -20,9 +20,6 @@ int main (int argc, char *argv[])
 
 		gtk_init (&argc, &argv);
 
-		if (arr == NULL)
-				return -1;
-
 		changed = kanji_list_view (arr);
 
 		if (changed)
