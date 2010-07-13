@@ -183,7 +183,6 @@ GArray* kanji_array_load (const gchar *filename)
 		}
 
 		g_input_stream_close (in, NULL, NULL);
-
 		g_object_unref (G_OBJECT (in));
 
 		g_free (buf);
@@ -241,6 +240,7 @@ void kanji_array_save (const gchar *filename, GArray *arr)
 		}
 
 		g_output_stream_close (G_OUTPUT_STREAM (out), NULL, NULL);
+		 g_object_unref (G_OBJECT (out));
 }
 
 void kanji_array_free (GArray *arr)
