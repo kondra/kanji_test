@@ -2,6 +2,7 @@
 
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
+#include <gio/gio.h>
 #include <string.h>
 
 typedef struct
@@ -47,14 +48,21 @@ static GArray* kanji_decomposition_process (const gchar*);
 static GArray* radicals_process (const gchar *filename)
 {
 		GArray *arr;
-		FILE *f;
+
+		GFile *f;
+		GFileInputStream *in;
+		GError *err = NULL;
 
 		gchar buf[20];
 		int l, i, j;
 
-		f = fopen (filename, "rb");
+		f = g_file_new_for_path (filename);
 
-		fread (&l, sizeof (int), 1, f);
+		in = g_file_read (f, NULL, &err);
+		if (err != NULL)
+				g_error ("Unable to read file: %s\n", err->message);
+
+		g_input_stream_read (G_INPUT_STREAM (in), &l, sizeof (int), NULL, NULL);
 		arr = g_array_sized_new (TRUE, TRUE, sizeof (Radical), l);
 		arr->len = l;
 
@@ -63,7 +71,7 @@ static GArray* radicals_process (const gchar *filename)
 				j = 0;
 				while (1)	
 				{
-						fread (&buf[j], sizeof (gchar), 1, f);
+						g_input_stream_read (G_INPUT_STREAM (in), &buf[j], sizeof (gchar), NULL, NULL);
 
 						if (buf[j] == 0)
 								break;
@@ -73,14 +81,15 @@ static GArray* radicals_process (const gchar *filename)
 				g_array_index (arr, Radical, i).rad = g_strdup (buf);
 				g_array_index (arr, Radical, i).state = 0;
 
-				fread (&(g_array_index (arr, Radical, i).stroke), sizeof (guint8), 1, f);
-				fread (&(g_array_index (arr, Radical, i).num), sizeof (guint16), 1, f);
+				g_input_stream_read (G_INPUT_STREAM (in), &(g_array_index (arr, Radical, i).stroke), sizeof (guint8), NULL, NULL);
+				g_input_stream_read (G_INPUT_STREAM (in), &(g_array_index (arr, Radical, i).num), sizeof (guint16), NULL, NULL);
 
 				g_array_index (arr, Radical, i).kanji = (guint16*) g_malloc0 (sizeof (guint16) * g_array_index (arr, Radical, i).num);
-				fread (g_array_index (arr, Radical, i).kanji, sizeof (guint16), g_array_index (arr, Radical, i).num, f);
+				g_input_stream_read (G_INPUT_STREAM (in), g_array_index (arr, Radical, i).kanji, sizeof (guint16) * g_array_index (arr, Radical, i).num, NULL, NULL);
 		}
 
-		fclose (f);
+		g_input_stream_close (G_INPUT_STREAM (in), NULL, NULL);
+		g_object_unref (G_OBJECT (in));
 
 		return arr;
 }
@@ -89,14 +98,22 @@ static GArray* radicals_process (const gchar *filename)
 static GArray* kanji_decomposition_process (const gchar *filename)
 {
 		GArray *arr;
-		FILE *f;
+
+		GFile *f;
+		GFileInputStream *in;
+		GError *err = NULL;
 
 		gchar buf[20];
 		int l, i, j;
 
-		f = fopen (filename, "rb");
+		f = g_file_new_for_path (filename);
 
-		fread (&l, sizeof (int), 1, f);
+		in = g_file_read (f, NULL, &err);
+		if (err != NULL)
+				g_error ("Unable to read file: %s\n", err->message);
+
+		g_input_stream_read (G_INPUT_STREAM (in), &l, sizeof (int), NULL, NULL);
+
 		arr = g_array_sized_new (TRUE, TRUE, sizeof (KanjiDecomposition), l);
 		arr->len = l;
 
@@ -105,7 +122,7 @@ static GArray* kanji_decomposition_process (const gchar *filename)
 				j = 0;
 				while (1)	
 				{
-						fread (&buf[j], sizeof (gchar), 1, f);
+						g_input_stream_read (G_INPUT_STREAM (in), &buf[j], sizeof (gchar), NULL, NULL);
 
 						if (buf[j] == 0)
 								break;
@@ -115,14 +132,16 @@ static GArray* kanji_decomposition_process (const gchar *filename)
 				g_array_index (arr, KanjiDecomposition, i).kanji = g_strdup (buf);
 				g_array_index (arr, KanjiDecomposition, i).state = 1;
 
-				fread (&(g_array_index (arr, KanjiDecomposition, i).stroke), sizeof (guint8), 1, f);
-				fread (&(g_array_index (arr, KanjiDecomposition, i).num), sizeof (guint8), 1, f);
+				g_input_stream_read (G_INPUT_STREAM (in), &(g_array_index (arr, KanjiDecomposition, i).stroke), sizeof (guint8), NULL, NULL);
+				g_input_stream_read (G_INPUT_STREAM (in), &(g_array_index (arr, KanjiDecomposition, i).num), sizeof (guint8), NULL, NULL);
 				
 				g_array_index (arr, KanjiDecomposition, i).radicals = (guint16*) g_malloc0 (sizeof (guint16) * g_array_index (arr, KanjiDecomposition, i).num);
-				fread (g_array_index (arr, KanjiDecomposition, i).radicals, sizeof (guint16), g_array_index (arr, KanjiDecomposition, i).num, f);
+				g_input_stream_read (G_INPUT_STREAM (in), g_array_index (arr, KanjiDecomposition, i).radicals, 
+								sizeof (guint16) * g_array_index (arr, KanjiDecomposition, i).num, NULL, NULL);
 		}
 		
-		fclose (f);
+		g_input_stream_close (G_INPUT_STREAM (in), NULL, NULL);
+		g_object_unref (G_OBJECT (in));
 
 		return arr;
 }
