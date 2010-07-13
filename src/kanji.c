@@ -72,22 +72,14 @@ GArray* kanji_array_append (GArray *arr, Kanji *k)
 		return g_array_append_vals (arr, k, 1);
 }
 
-static void error (GArray *arr, const gchar *filename)
-{
-		g_warning ("kanji: unable to parse file %s (kanji_array_load)", filename);
-		kanji_array_free (arr);
-		arr = NULL;
-}
-
 GArray* kanji_array_load (const gchar *filename)
 {
-		FILE *f;
 		GArray *arr = kanji_array_create;
 		gchar b, *buf;
 		gint pos, len, curpos, i;
-		struct stat statbuf;
-		guint size;
+		gsize size;
 		Kanji *k;
+		GError *error = NULL;
 
 		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
 		{
@@ -95,41 +87,35 @@ GArray* kanji_array_load (const gchar *filename)
 				return NULL;
 		}
 
-		if (lstat (filename, &statbuf))
-				g_error ("Unable to lstat %s: %s", filename, strerror (errno));
-		size = statbuf.st_size;
-
-		if ((f = fopen (filename, "rb")) == NULL)
-		{
-				g_warning ("File %s does not exist", filename);
-				return NULL;
-		}
+		g_file_get_contents (filename, &buf, &size, &error);
 		
-		buf = g_malloc0 (10000 * sizeof (gchar));
+		g_type_init ();
+
+		GInputStream *in = g_memory_input_stream_new_from_data (buf, size, NULL);
+
 		k = g_malloc0 (sizeof (Kanji));
 
 		k->state = TRUE;
 
 		pos = curpos = 0;
 
-		while (pos + curpos < size)
+		while (pos < size)
 		{
-				fread (&(k->jlpt_level), sizeof (gint), 1, f);
-				fread (&(k->grade), sizeof (gint), 1, f);
-				fread (&(k->kanji_stroke), sizeof (gint), 1, f);
-				fread (&(k->radical_stroke), sizeof (gint), 1, f);
-				fread (&(k->num), sizeof (gint), 1, f);
-				fread (&b, sizeof (gchar), 1, f);
+				g_input_stream_read (in, &(k->jlpt_level), sizeof (gint), NULL, NULL);
+				g_input_stream_read (in, &(k->grade), sizeof (gint), NULL, NULL);
+				g_input_stream_read (in, &(k->kanji_stroke), sizeof (gint), NULL, NULL);
+				g_input_stream_read (in, &(k->radical_stroke), sizeof (gint), NULL, NULL);
+				g_input_stream_read (in, &(k->num), sizeof (gint), NULL, NULL);
+				g_input_stream_read (in, &b, sizeof (gchar), NULL, NULL);
 
 				//add more smart reading
-				curpos = ftell (f);
-				fread (buf, sizeof (gchar), 10000, f);
+				pos = g_seekable_tell (G_SEEKABLE (in));
 
 				k->word_writing = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
 				k->word_reading = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
 				k->word_meaning = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
 
-				for (pos = 0, i = 0; i < k->num; i++)
+				for (i = 0; i < k->num; i++)
 				{
 						k->word_writing[i] = g_strdup(buf + pos);
 						pos += strlen (k->word_writing[i]) + 1;
@@ -145,7 +131,9 @@ GArray* kanji_array_load (const gchar *filename)
 				k->kanji = g_strdup (buf + pos);
 				if (k->kanji == NULL)
 				{
-						error (arr, filename);
+						g_warning ("kanji: unable to parse file %s (kanji_array_load)", filename);
+						kanji_array_free (arr);
+						arr = NULL;
 						break;
 				}
 				pos += len + 1;
@@ -154,7 +142,9 @@ GArray* kanji_array_load (const gchar *filename)
 				k->on = g_strdup (buf + pos);
 				if (k->on == NULL)
 				{
-						error (arr, filename);
+						g_warning ("kanji: unable to parse file %s (kanji_array_load)", filename);
+						kanji_array_free (arr);
+						arr = NULL;
 						break;
 				}
 				pos += len + 1;
@@ -163,7 +153,9 @@ GArray* kanji_array_load (const gchar *filename)
 				k->meaning = g_strdup (buf + pos);
 				if (k->meaning == NULL)
 				{
-						error (arr, filename);
+						g_warning ("kanji: unable to parse file %s (kanji_array_load)", filename);
+						kanji_array_free (arr);
+						arr = NULL;
 						break;
 				}
 				pos += len + 1;
@@ -172,20 +164,20 @@ GArray* kanji_array_load (const gchar *filename)
 				k->radical = g_strdup (buf + pos);
 				if (k->radical == NULL)
 				{
-						error (arr, filename);
+						g_warning ("kanji: unable to parse file %s (kanji_array_load)", filename);
+						kanji_array_free (arr);
+						arr = NULL;
 						break;
 				}
 				pos += len + 1;
 
-				fseek (f, curpos + pos, SEEK_SET);
+				g_seekable_seek (G_SEEKABLE (in), pos, G_SEEK_SET, NULL, NULL);
 				
 				arr = kanji_array_append (arr, k);
 		}
 
 		g_free (buf);
 		g_free (k);
-
-		fclose (f);
 
 		return arr;
 }
