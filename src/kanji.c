@@ -89,7 +89,7 @@ GArray* kanji_array_load (const gchar *filename)
 
 		g_file_get_contents (filename, &buf, &size, &error);
 
-		if (error != 0)
+		if (error != NULL)
 		{
 				g_warning ("(kanji_array_load): Unable to read file %s", error->message);
 				kanji_array_free (arr);
