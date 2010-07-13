@@ -10,6 +10,8 @@ int main (int argc, char *argv[])
 
 		gboolean changed;
 
+		gtk_init (&argc, &argv);
+
 //		Memory Profiling
 //		g_mem_set_vtable (glib_mem_profiler_table);
 //		g_atexit (g_mem_profile);
@@ -17,8 +19,6 @@ int main (int argc, char *argv[])
 		arr = kanji_array_load ("kanjidict");
 		if (arr == NULL)
 				arr = kanji_array_create;
-
-		gtk_init (&argc, &argv);
 
 		changed = kanji_list_view (arr);
 
