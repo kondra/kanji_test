@@ -1,7 +1,7 @@
 //it's a testing version of multiradical search
 
 #include <gtk/gtk.h>
-#include <stdlib.h>
+#include <glib/gprintf.h>
 #include <string.h>
 
 typedef struct
@@ -196,7 +196,7 @@ static void radical_button_toggled (GtkWidget *button, Data *p)
 						l = g_array_index (result, guint16, i);
 						if (g_array_index (kanji, KanjiDecomposition, l).stroke > max || g_array_index (kanji, KanjiDecomposition, l).stroke < min)
 								continue;
-						sprintf (buf + off, "%s ", g_array_index (kanji, KanjiDecomposition, l).kanji);
+						g_sprintf (buf + off, "%s ", g_array_index (kanji, KanjiDecomposition, l).kanji);
 						off += strlen (g_array_index (kanji, KanjiDecomposition, l).kanji) + 1;
 						cnt++;
 						if (cnt >= 10)
@@ -287,7 +287,7 @@ static void radical_button_toggled (GtkWidget *button, Data *p)
 						l = g_array_index (result, guint16, i);
 						if (g_array_index (kanji, KanjiDecomposition, l).stroke > max || g_array_index (kanji, KanjiDecomposition, l).stroke < min)
 								continue;
-						sprintf (buf + off, "%s ", g_array_index (kanji, KanjiDecomposition, l).kanji);
+						g_sprintf (buf + off, "%s ", g_array_index (kanji, KanjiDecomposition, l).kanji);
 						off += strlen (g_array_index (kanji, KanjiDecomposition, l).kanji) + 1;
 						cnt++;
 						if (cnt >= 10)
@@ -368,7 +368,7 @@ static void stroke_range_changed (GtkWidget *spin, Data *p)
 				l = g_array_index (p->result, guint16, i);
 				if (g_array_index (p->kanji, KanjiDecomposition, l).stroke > max || g_array_index (p->kanji, KanjiDecomposition, l).stroke < min)
 						continue;
-				sprintf (buf + off, "%s ", g_array_index (p->kanji, KanjiDecomposition, l).kanji);
+				g_sprintf (buf + off, "%s ", g_array_index (p->kanji, KanjiDecomposition, l).kanji);
 				off += strlen (g_array_index (p->kanji, KanjiDecomposition, l).kanji) + 1;
 				cnt++;
 				if (cnt >= 10)
