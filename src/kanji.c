@@ -1,10 +1,6 @@
-#include <errno.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
 #include <gtk/gtk.h>
 #include <gio/gio.h>
+#include <string.h>
 
 #include "kanji.h"
 
@@ -74,24 +70,35 @@ GArray* kanji_array_append (GArray *arr, Kanji *k)
 
 GArray* kanji_array_load (const gchar *filename)
 {
-		GArray *arr = kanji_array_create;
 		gchar b, *buf;
 		gint pos, len, curpos, i;
 		gsize size;
-		Kanji *k;
+
 		GError *error = NULL;
+		GInputStream *in;
+		GArray *arr = kanji_array_create;
+
+		Kanji *k;
 
 		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
 		{
 				g_warning ("File %s does not exist", filename);
+				kanji_array_free (arr);
 				return NULL;
 		}
 
 		g_file_get_contents (filename, &buf, &size, &error);
+
+		if (error != 0)
+		{
+				g_warning ("(kanji_array_load): Unable to read file %s", error->message);
+				kanji_array_free (arr);
+				return NULL;
+		}
 		
 		g_type_init ();
 
-		GInputStream *in = g_memory_input_stream_new_from_data (buf, size, NULL);
+		in = g_memory_input_stream_new_from_data (buf, size, NULL);
 
 		k = g_malloc0 (sizeof (Kanji));
 
@@ -108,7 +115,6 @@ GArray* kanji_array_load (const gchar *filename)
 				g_input_stream_read (in, &(k->num), sizeof (gint), NULL, NULL);
 				g_input_stream_read (in, &b, sizeof (gchar), NULL, NULL);
 
-				//add more smart reading
 				pos = g_seekable_tell (G_SEEKABLE (in));
 
 				k->word_writing = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
@@ -175,6 +181,10 @@ GArray* kanji_array_load (const gchar *filename)
 				
 				arr = kanji_array_append (arr, k);
 		}
+
+		g_input_stream_close (in, NULL, NULL);
+
+		g_object_unref (G_OBJECT (in));
 
 		g_free (buf);
 		g_free (k);
