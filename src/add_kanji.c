@@ -287,11 +287,11 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		vbox1_additional = gtk_vbox_new (FALSE, 5);
 		vbox2_additional = gtk_vbox_new (FALSE, 5);
 
-		gtk_box_pack_start (GTK_BOX (vbox1_additional), jlpt_label, FALSE, FALSE, 10);
-		gtk_box_pack_start (GTK_BOX (vbox1_additional), grade_label, FALSE, FALSE, 10);
+		gtk_box_pack_start (GTK_BOX (vbox1_additional), jlpt_label, FALSE, FALSE, 6);
+		gtk_box_pack_start (GTK_BOX (vbox1_additional), grade_label, FALSE, FALSE, 6);
 
-		gtk_box_pack_start (GTK_BOX (vbox2_additional), w.jlpt_spin, FALSE, FALSE, 5);
-		gtk_box_pack_start (GTK_BOX (vbox2_additional), w.grade_spin, FALSE, FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (vbox2_additional), w.jlpt_spin, FALSE, FALSE, 3);
+		gtk_box_pack_start (GTK_BOX (vbox2_additional), w.grade_spin, FALSE, FALSE, 3);
 		
 		hbox_additional = gtk_hbox_new (FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox_additional), vbox1_additional, FALSE, FALSE, 5);
