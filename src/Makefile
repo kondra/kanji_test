@@ -10,7 +10,7 @@ TARGET = kanji_test
 
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET)
-	$(CC) $(CFLAGS) main2.c -o multirad
+	$(CC) $(CFLAGS) main2.c -o main2
 
 kanji.o: kanji.h
 add_kanji.o: add_kanji.h kanji.h
