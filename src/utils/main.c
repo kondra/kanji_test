@@ -39,7 +39,7 @@ int main (int argc, char *argv[])
 
 		fclose (f);
 
-		f = fopen ("edict", "rb");
+		f = fopen ("../edict", "rb");
 
 		int cnt = 0;
 		int l;
@@ -81,7 +81,7 @@ int main (int argc, char *argv[])
 								}
 								if (flag == TRUE && l != 0)
 								{
-										fprintf (files[j], "%s\n", buf);
+										fprintf (files[j], "%s", buf);
 										g ++;
 								}
 						}
