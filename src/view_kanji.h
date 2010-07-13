@@ -2,6 +2,6 @@
 
 #define VIEW_KANJI_INCLUDE
 
-void kanji_list_view (GArray*);
+gboolean kanji_list_view (GArray*);
 
 #endif
