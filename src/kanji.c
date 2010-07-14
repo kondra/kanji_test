@@ -44,9 +44,15 @@ Kanji* kanji_create (const gchar *kanji, const gchar *radical, const gchar *on, 
 
 		k->kanji = g_strdup (kanji);
 		
-		k->radical = g_strdup (radical);
+		if (radical == NULL)
+				k->radical = g_strdup (" ");
+		else
+				k->radical = g_strdup (radical);
 		
-		k->on = g_strdup (on);
+		if (on == NULL)
+				k->on = g_strdup (" ");
+		else
+				k->on = g_strdup (on);
 		
 		if (meaning == NULL)
 				k->meaning = g_strdup (" ");
