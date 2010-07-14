@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-gchar kanji[100][10];
-gunichar arr[100], uc;
+gchar kanji[1000][10];
+gunichar arr[1000], uc;
 gchar buf[3000];
-gchar str[100];
-FILE *files[100];
+gchar str[1000];
+FILE *files[1000];
 gchar *p;
 gint len, k;
 gboolean flag;
