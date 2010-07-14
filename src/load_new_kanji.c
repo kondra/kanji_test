@@ -127,7 +127,7 @@ static void kanjidic_parse (Kanji *tmp)
 						uc = g_utf8_get_char (p);
 						if (g_utf8_strchr (katakana, len, uc) == NULL)
 						{
-								g_debug ("olol");
+								g_debug ("%s", tmp->kanji);
 								break;
 						}
 						for (; buf[i] != ' '; i++);
@@ -138,6 +138,9 @@ static void kanjidic_parse (Kanji *tmp)
 								tmp->on = g_strdup_printf ("%s, %s", tmp->on, p);
 						off += strlen (tmp->on);
 				}
+				if (tmp->on == NULL)
+						tmp->on = g_strdup (" ");
+				break;
 		}
 
 		fclose (f);
@@ -150,23 +153,25 @@ static GArray* edict_parse (GArray *arr)
 		gchar name[100];
 		gchar buf[3000], *p;
 		gchar buft[1000], *cur;
+		gchar kanji[100];
 
 		gchar *writing[200];
 		gchar *reading[200];
 		gchar *meaning[200];
 
-		int state, i, j, k, num;
+		gint state, i, j, k, num;
+		gint u_len;
 
 		gboolean flag;
+		gunichar uc;
 
 		Kanji *tmp;
 
 		for (i = 0; i < 100; i++)
 				writing[i] = meaning[i] = reading[i] = 0;
 
-		for (j = 0; j < 21; j++)
+		for (j = 0; j < 181; j++)
 		{
-				if (j != 1) continue;
 				sprintf (name, "utils/%d", j);
 				f = fopen (name, "rb");
 				k = 0;
@@ -284,7 +289,10 @@ static GArray* edict_parse (GArray *arr)
 						k++;
 				}
 				num = k;
-				tmp = kanji_create (writing[0], " ", " ", " ", 5, 1, 1, 1, num, writing, reading, meaning);
+				uc = g_utf8_get_char (writing[0]);
+				u_len = g_unichar_to_utf8 (uc, kanji);
+				kanji[u_len] = 0;
+				tmp = kanji_create (kanji, " ", " ", " ", 4, 1, 1, 1, num, writing, reading, meaning);
 
 				kanjidic_parse (tmp);
 
@@ -302,85 +310,6 @@ static GArray* edict_parse (GArray *arr)
 		}
 
 		return arr;
-}
-
-static void whitespaces (GArray *arr)
-{
-		Kanji *tmp, *tmp2;
-		int i, j, k, pos, num;
-		gchar c;
-		gchar *writing[100];
-		gchar *reading[100];
-		gchar *meaning[100];
-
-
-		for (i = 0; i < 100; i++)
-				writing[i] = meaning[i] = reading[i] = 0;
-
-		tmp = &g_array_index (arr, Kanji, i = 0);
-		while (i < arr->len)
-		{
-				num = 0;
-				j = 0;
-				pos = 0;
-				for (k = 0; k < strlen (tmp->kun) + 1; k++)
-				{
-						if (tmp->kun[k] == '\n' || tmp->kun[k] == ',' || tmp->kun[k] == '\0')
-						{
-								c = tmp->kun[k];
-								tmp->kun[k] = '\0';
-								if (tmp->kun[pos] == ' ')
-								{
-										reading[j] = g_strdup ((tmp->kun) + pos + 1);
-										writing[j] = g_strdup ((tmp->kun) + pos + 1);
-								}
-								else
-								{
-										reading[j] = g_strdup ((tmp->kun) + pos);
-										writing[j] = g_strdup ((tmp->kun) + pos);
-								}
-								tmp->kun[k] = c;
-								j++;
-								pos = k + 1;
-						}
-				}
-				num = j;
-				
-				pos = 0;
-				j = 0;
-				for (k = 0; k < strlen (tmp->meaning) + 1; k++)
-				{
-						if (tmp->meaning[k] == '\n' || tmp->meaning[k] == ',' || tmp->meaning[k] == '\0')
-						{
-								c = tmp->meaning[k];
-								tmp->meaning[k] = '\0';
-								if (tmp->meaning[pos] == ' ')
-										meaning[j] = g_strdup ((tmp->meaning) + pos + 1);
-								else
-										meaning[j] = g_strdup ((tmp->meaning) + pos);
-								tmp->meaning[k] = c;
-								j++;
-								pos = k + 1;
-						}
-				}
-				num = MAX (num, j);
-
-				tmp2 = kanji_create (tmp->str, tmp->radical, tmp->on, NULL, tmp->jlpt_level, tmp->grade, tmp->stroke, tmp->radical_stroke, num, 
-								writing, reading, meaning);
-
-				g_array_index (arr, Kanji, i) = *tmp2;
-				tmp = &g_array_index (arr, Kanji, ++i);
-
-				for (k = 0; k < num; k++)
-				{
-						g_free (reading[k]);
-						reading[k] = NULL;
-						g_free (writing[k]);
-						writing[k] = NULL;
-						g_free (meaning[k]);
-						meaning[k] = NULL;
-				}
-		}
 }
 
 int main (int argc, char *argv[])
