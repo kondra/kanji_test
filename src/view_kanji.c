@@ -50,6 +50,7 @@ static void row_activated (GtkTreeView*, GtkTreePath*, GtkTreeViewColumn*, GArra
 static void row_add (GtkButton*, Data*);
 static void row_remove (GtkButton*, Data*);
 static void row_edit (GtkButton*, Data*);
+static void save_dict (GtkButton*, Data*);
 static void close_dialog (GtkButton*, GtkDialog*);
 
 gboolean kanji_list_view (GArray *arr)
@@ -108,11 +109,13 @@ gboolean kanji_list_view (GArray *arr)
 		GtkWidget *add_button = gtk_button_new_from_stock (GTK_STOCK_ADD);
 		GtkWidget *remove_button = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
 		GtkWidget *edit_button = gtk_button_new_from_stock (GTK_STOCK_EDIT);
+		GtkWidget *save_button = gtk_button_new_from_stock (GTK_STOCK_SAVE);
 		GtkWidget *close_button = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
 
 		g_signal_connect (G_OBJECT (add_button), "clicked", G_CALLBACK (row_add), (gpointer) &p);
 		g_signal_connect (G_OBJECT (remove_button), "clicked", G_CALLBACK (row_remove), (gpointer) &p);
 		g_signal_connect (G_OBJECT (edit_button), "clicked", G_CALLBACK (row_edit), (gpointer) &p);
+		g_signal_connect (G_OBJECT (save_button), "clicked", G_CALLBACK (save_dict), (gpointer) &p);
 		g_signal_connect (G_OBJECT (close_button), "clicked", G_CALLBACK (close_dialog), (gpointer) dialog);
 
 		hbox = gtk_hbox_new (FALSE, 5);
@@ -120,6 +123,7 @@ gboolean kanji_list_view (GArray *arr)
 		gtk_box_pack_start (GTK_BOX (hbox), add_button, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox), remove_button, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox), edit_button, FALSE, FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (hbox), save_button, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox), close_button, FALSE, FALSE, 5);
 
 		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), scrolled_win, TRUE, TRUE, 5);
@@ -140,6 +144,12 @@ gboolean kanji_list_view (GArray *arr)
 static void close_dialog (GtkButton *button, GtkDialog *dialog)
 {
 		gtk_dialog_response (dialog, GTK_RESPONSE_CLOSE);
+}
+
+static void save_dict (GtkButton *button, Data *p)
+{
+		if (p->changed)
+				kanji_array_save ("kanjidict", p->arr);
 }
 
 static void row_edit (GtkButton *button, Data *p)
