@@ -5,6 +5,9 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "kanji.h"
+#include "kanji_article_view.h"
+
 typedef struct
 {
 		guint x, y; // coordinates in buttons table
@@ -31,6 +34,7 @@ typedef struct
 		gboolean cleared;
 		GArray *radicals;
 		GArray *kanji;
+		GArray *dict;
 		GArray *result;
 		GtkWidget *textview;
 		GtkTextBuffer *buffer;
@@ -41,6 +45,7 @@ typedef struct
 static void destroy (GtkWidget*, gpointer);
 static void radical_button_toggled (GtkWidget*, Data*);
 static void clear_button_pressed (GtkWidget*, Data*);
+static gboolean kanji_button_pressed (GtkWidget*, GdkEventButton*, Data*);
 static void stroke_range_changed (GtkWidget*, Data*);
 static GArray* radicals_process (const gchar*);
 static GArray* kanji_decomposition_process (const gchar*);
@@ -410,6 +415,39 @@ static void destroy (GtkWidget *window, gpointer data)
 		gtk_main_quit ();
 }
 
+static gboolean kanji_button_pressed (GtkWidget *textview, GdkEventButton *event, Data *p)
+{
+		static gboolean state = TRUE;
+		if (state)
+		{
+				GdkCursor *cursor = gdk_cursor_new (GDK_LEFT_PTR);
+				gdk_window_set_cursor(event->window, cursor);
+				state = FALSE;
+		}
+		if (event->type == GDK_BUTTON_PRESS && event->button == 1)
+		{
+				GtkTextIter iter;
+				gchar buf[7];
+				gint x, y, l, i;
+				gunichar uc;
+
+				gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (textview), gtk_text_view_get_window_type (GTK_TEXT_VIEW (textview), event->window), event->x, event->y, &x, &y);
+				gtk_text_view_get_iter_at_position (GTK_TEXT_VIEW (textview), &iter, NULL, x, y);
+
+				uc = gtk_text_iter_get_char (&iter);
+				l = g_unichar_to_utf8 (uc, buf);
+				buf[l] = 0;
+
+				for (i = 0; i < p->dict->len; i++)
+						if (strcmp (buf, g_array_index (p->dict, Kanji, i).kanji) == 0)
+								kanji_article_view (&g_array_index (p->dict, Kanji, i));
+
+				return TRUE;
+		}
+
+		return FALSE;
+}
+
 int main (int argc, char *argv[])
 {
 		GtkWidget *window;
@@ -427,7 +465,7 @@ int main (int argc, char *argv[])
 		const gchar filename1[] = "rindex";
 		const gchar filename2[] = "kindex";
 
-		GArray *radicals, *kanji;
+		GArray *radicals, *kanji, *dict;
 
 		Data p;
 
@@ -442,6 +480,9 @@ int main (int argc, char *argv[])
 
 		kanji = kanji_decomposition_process (filename2);
 		g_message ("decompositions processed");
+
+		dict = kanji_array_load ("kanjidict");
+		g_message ("dictionary loaded");
 
 		window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 		gtk_window_set_title (GTK_WINDOW (window), "Kanji");
@@ -458,11 +499,14 @@ int main (int argc, char *argv[])
 		buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
 		gtk_text_buffer_create_tag (buffer, "kanji_font", "font", "20", NULL);
 
+		g_signal_connect (G_OBJECT (textview), "button-press-event", G_CALLBACK (kanji_button_pressed), (gpointer) &p);
+		
 		p.result = g_array_sized_new (TRUE, TRUE, sizeof (guint16), 2000);
 		p.result->len = 0;
 		p.cleared = FALSE;
 		p.radicals = radicals;
 		p.kanji = kanji;
+		p.dict = dict;
 		p.buffer = buffer;
 		p.textview = textview;
 
