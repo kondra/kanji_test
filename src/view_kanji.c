@@ -149,7 +149,10 @@ static void close_dialog (GtkButton *button, GtkDialog *dialog)
 static void save_dict (GtkButton *button, Data *p)
 {
 		if (p->changed)
+		{
 				kanji_array_save ("kanjidict", p->arr);
+				p->changed = FALSE;
+		}
 }
 
 static void row_edit (GtkButton *button, Data *p)
