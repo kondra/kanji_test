@@ -312,6 +312,118 @@ static GArray* edict_parse (GArray *arr)
 		return arr;
 }
 
+static void vocab_process (GArray *arr)
+{
+		FILE *f = fopen ("utils/nvocab2", "r");
+
+		gchar buf[1000], outbuf[10], *p;
+		gchar *reading[10000];
+		gchar *writing[10000];
+		gchar *meaning[10000];
+
+		gint save[400][100];
+		gint i, j, k, n, t, cnt, old;
+
+		gunichar uc;
+		gboolean flag;
+
+		Collocations *tmp;
+
+		for (i = 0; i < 400; i++)
+				save[i][0] = 0;
+
+		k = 0;
+		while (!feof (f))
+		{
+				fgets (buf, 1000, f);
+				n = strlen (buf);
+
+				for (i = 0; buf[i] != ' '; i++);
+				buf[i] = 0;
+				reading[k] = g_strdup (buf);
+
+				for (j = i + 1; buf[j] != ' '; j++);
+				buf[j] = 0;
+				writing[k] = g_strdup (buf + i + 1);
+
+				buf[n - 2] = 0;
+				meaning[k] = g_strdup (buf + j + 2);
+				k++;
+		}
+		fclose (f);
+
+		for (i = 0; i < k; i++)
+		{
+				cnt = 0;
+				p = writing[i];
+				n = g_utf8_strlen (p, -1);
+				while (cnt < n)
+				{
+						uc = g_utf8_get_char (p);
+						outbuf[g_unichar_to_utf8 (uc, outbuf)] = 0;
+						p = g_utf8_next_char (p);
+						cnt++;
+						for (j = 0; j < arr->len; j++)
+						{
+								if (strcmp (outbuf, g_array_index (arr, Kanji, j).kanji) == 0)
+								{
+										flag = TRUE;
+										for (t = 0; t < g_array_index (arr, Kanji, j).num; t++)
+												if (strcmp (writing[i], g_array_index (arr, Kanji, j).word_writing[t]) == 0)
+												{
+														flag = FALSE;
+														break;
+												}
+										if (flag)
+										{
+												save[j][++save[j][0]] = i;
+										}
+								}
+						}
+				}
+		}
+
+		for (i = 0; i < arr->len; i++)
+		{
+				if (save[i][0] == 0)
+						continue;
+
+				printf ("%s\n", g_array_index (arr, Kanji, i).kanji);
+
+				if (g_array_index (arr, Kanji, i).col != NULL)
+						old = g_array_index (arr, Kanji, i).col->num;
+				else
+						old = 0;
+
+				tmp = (Collocations*) g_malloc0 (sizeof (Collocations));
+		
+				tmp->num = save[i][0] + old;
+		
+				tmp->writing = (gchar**) g_malloc0 (tmp->num * sizeof (gchar*));
+				tmp->reading = (gchar**) g_malloc0 (tmp->num * sizeof (gchar*));
+				tmp->meaning = (gchar**) g_malloc0 (tmp->num * sizeof (gchar*));
+				tmp->level = (guint8*) g_malloc0 (tmp->num * sizeof (guint8));
+
+				for (j = 0; j < old; j++)
+				{
+						tmp->level[j] = g_array_index (arr, Kanji, i).col->level[j];
+						tmp->writing[j] = g_array_index (arr, Kanji, i).col->writing[j];
+						tmp->reading[j] = g_array_index (arr, Kanji, i).col->reading[j];
+						tmp->meaning[j] = g_array_index (arr, Kanji, i).col->meaning[j];
+				}
+				
+				for (j = old + 1; j < old + save[i][0] + 1; j++)
+				{
+						tmp->level[j - 1] = 3;
+						tmp->writing[j - 1] = writing[save[i][j - old]];
+						tmp->reading[j - 1] = reading[save[i][j - old]];
+						tmp->meaning[j - 1] = meaning[save[i][j - old]];
+
+				}
+				g_array_index (arr, Kanji, i).col = tmp;
+		}
+}
+
 int main (int argc, char *argv[])
 {
 		GArray *arr;
@@ -319,14 +431,12 @@ int main (int argc, char *argv[])
 		gtk_init (&argc, &argv);
 
 		arr = kanji_array_load ("kanjidict");
-		if (arr == NULL)
-				arr = kanji_array_create;
 
-		load_radicals ();
+		vocab_process (arr);
 
-		arr = edict_parse (arr);
+//		kanji_list_view (arr);
 
-		kanji_array_save ("kanjidict", arr);
+//		kanji_array_save ("kanjidict", arr);
 
 		return 0;
 }
