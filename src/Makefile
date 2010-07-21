@@ -2,9 +2,9 @@
 CC = gcc
 CFLAGS = -Wall -g `pkg-config --cflags --libs gtk+-2.0`
 
-OBJ1 = kanji.o add_kanji.o view_kanji.o kanji_article_view.o main.o
-OBJ2 = kanji.o add_kanji.o view_kanji.o kanji_article_view.o load_new_kanji.o
-OBJ3 = kanji.o add_kanji.o view_kanji.o kanji_article_view.o main2.o
+OBJ1 = kanji.o add_kanji.o view_kanji.o kanji_article_view.o main.o collocations_edit.o
+OBJ2 = kanji.o add_kanji.o view_kanji.o kanji_article_view.o load_new_kanji.o collocations_edit.o
+OBJ3 = kanji.o add_kanji.o view_kanji.o kanji_article_view.o main2.o collocations_edit.o
 
 TARGET1 = kanji_test
 TARGET2 = load_new 
@@ -24,11 +24,12 @@ $(TARGET2): $(OBJ2)
 
 load_new_kanji.o: view_kanji.h add_kanji.h kanji.h
 kanji.o: kanji.h
-add_kanji.o: add_kanji.h kanji.h
+add_kanji.o: add_kanji.h kanji.h collocations_edit.h
 main.o: view_kanji.h add_kanji.h kanji.h
 main2.o: view_kanji.h add_kanji.h kanji.h kanji_article_view.h
 view_kanji.o: view_kanji.h kanji.h add_kanji.h
 kanji_article_view.o: kanji_article_view.h kanji.h
+collocations_edit.o: collocations_edit.h kanji.h
 
 clean:
 	rm -f $(TARGET1) *.o 
