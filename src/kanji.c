@@ -3,11 +3,46 @@
 #include <string.h>
 
 #include "kanji.h"
-
+/*
 Kanji* kanji_create_empty (void)
 {
 		Kanji *k = (Kanji*) g_malloc0 (sizeof (Kanji));
 		return k;
+}
+*/
+Collocations* collocations_create (gint num, gchar **writings, gchar **readings, gchar **meanings, guint8 *levels, gboolean alloc)
+{
+		gint i;
+
+		Collocations *tmp;
+
+		tmp = (Collocations*) g_malloc0 (sizeof (Collocations));
+
+		tmp->num = num;
+
+		tmp->writing = (gchar**) g_malloc0 (num * sizeof (gchar*));
+		tmp->reading = (gchar**) g_malloc0 (num * sizeof (gchar*));
+		tmp->meaning = (gchar**) g_malloc0 (num * sizeof (gchar*));
+		tmp->level = (guint8*) g_malloc0 (num * sizeof (guint8));
+		
+		for (i = 0; i < num; i++)
+		{
+				if (alloc)
+				{
+						tmp->writing[i] = g_strdup (writings[i]);
+						tmp->reading[i] = g_strdup (readings[i]);
+						tmp->meaning[i] = g_strdup (meanings[i]);
+				}
+				else
+				{
+						tmp->writing[i] = writings[i];
+						tmp->reading[i] = readings[i];
+						tmp->meaning[i] = meanings[i];
+				}
+				tmp->level[i] = levels[i];
+		}
+
+		return tmp;
 }
 
 Kanji* kanji_create (const gchar *kanji, const gchar *radical, const gchar *on, const gchar *meaning, 
@@ -19,6 +54,7 @@ Kanji* kanji_create (const gchar *kanji, const gchar *radical, const gchar *on, 
 		Kanji *k = (Kanji*) g_malloc0 (sizeof (Kanji));
 
 		k->state = TRUE;
+		k->col = NULL;
 
 		k->word_writing = (gchar**) g_malloc0 (sizeof (gchar*) * num);
 		k->word_reading = (gchar**) g_malloc0 (sizeof (gchar*) * num);
@@ -67,22 +103,26 @@ Kanji* kanji_create (const gchar *kanji, const gchar *radical, const gchar *on, 
 
 		return k;
 }
-
-//TODO: write a macro
+/*
 GArray* kanji_array_append (GArray *arr, Kanji *k)
 {
 		return g_array_append_vals (arr, k, 1);
 }
-
+*/
 GArray* kanji_array_load (const gchar *filename)
 {
 		gchar b, *buf;
-		gint pos, len, curpos, i;
+		gint pos, len, curpos, i, cnum;
 		gsize size;
 
 		GError *error = NULL;
 		GInputStream *in;
-		GArray *arr = kanji_array_create;
+		GArray *arr = g_array_sized_new (TRUE, TRUE, sizeof (Kanji), 100);
+
+		gchar **cwritings;
+		gchar **creadings;
+		gchar **cmeanings;
+		guint8 *clevels;
 
 		Kanji *k;
 
@@ -109,6 +149,7 @@ GArray* kanji_array_load (const gchar *filename)
 		k = g_malloc0 (sizeof (Kanji));
 
 		k->state = TRUE;
+		k->col = NULL;
 
 		pos = curpos = 0;
 
@@ -119,6 +160,7 @@ GArray* kanji_array_load (const gchar *filename)
 				g_input_stream_read (in, &(k->kanji_stroke), sizeof (gint), NULL, NULL);
 				g_input_stream_read (in, &(k->radical_stroke), sizeof (gint), NULL, NULL);
 				g_input_stream_read (in, &(k->num), sizeof (gint), NULL, NULL);
+				g_input_stream_read (in, &(cnum), sizeof (gint), NULL, NULL);
 				g_input_stream_read (in, &b, sizeof (gchar), NULL, NULL);
 
 				pos = g_seekable_tell (G_SEEKABLE (in));
@@ -126,6 +168,14 @@ GArray* kanji_array_load (const gchar *filename)
 				k->word_writing = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
 				k->word_reading = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
 				k->word_meaning = (gchar**) g_malloc0 (sizeof (gchar*) * k->num);
+
+				if (cnum)
+				{
+						cwritings = (gchar**) g_malloc (sizeof (gchar*) * cnum);
+						creadings = (gchar**) g_malloc (sizeof (gchar*) * cnum);
+						cmeanings = (gchar**) g_malloc (sizeof (gchar*) * cnum);
+						clevels = (guint8*) g_malloc (sizeof (guint8) * cnum);
+				}
 
 				for (i = 0; i < k->num; i++)
 				{
@@ -138,6 +188,26 @@ GArray* kanji_array_load (const gchar *filename)
 						k->word_meaning[i] = g_strdup(buf + pos);
 						pos += strlen (k->word_meaning[i]) + 1;
 				}
+
+				for (i = 0; i < cnum; i++)
+				{
+						cwritings[i] = g_strdup(buf + pos);
+						pos += strlen (cwritings[i]) + 1;
+
+						creadings[i] = g_strdup(buf + pos);
+						pos += strlen (creadings[i]) + 1;
+
+						cmeanings[i] = g_strdup(buf + pos);
+						pos += strlen (cmeanings[i]) + 1;
+
+						clevels[i] = (guint8)*(buf + pos);
+						pos++;
+				}
+
+				if (cnum)
+						k->col = collocations_create (cnum, cwritings, creadings, cmeanings, clevels, FALSE);
+				else
+						k->col = NULL;
 
 				len = strlen (buf + pos);
 				k->kanji = g_strdup (buf + pos);
@@ -185,7 +255,7 @@ GArray* kanji_array_load (const gchar *filename)
 
 				g_seekable_seek (G_SEEKABLE (in), pos, G_SEEK_SET, NULL, NULL);
 				
-				arr = kanji_array_append (arr, k);
+				arr = g_array_append_vals (arr, k, 1);
 		}
 
 		g_input_stream_close (in, NULL, NULL);
@@ -228,6 +298,15 @@ void kanji_array_save (const gchar *filename, GArray *arr)
 				g_output_stream_write (G_OUTPUT_STREAM (out), &(k->kanji_stroke), sizeof (gint), NULL, NULL);
 				g_output_stream_write (G_OUTPUT_STREAM (out), &(k->radical_stroke), sizeof (gint), NULL, NULL);
 				g_output_stream_write (G_OUTPUT_STREAM (out), &(k->num), sizeof (gint), NULL, NULL);
+
+				if (k->col == NULL)
+				{
+						gint x = 0;
+						g_output_stream_write (G_OUTPUT_STREAM (out), &x, sizeof (gint), NULL, NULL);
+				}
+				else
+						g_output_stream_write (G_OUTPUT_STREAM (out), &(k->col->num), sizeof (gint), NULL, NULL);
+
 				g_output_stream_write (G_OUTPUT_STREAM (out), &b, sizeof (gchar), NULL, NULL);
 
 				for (j = 0; j < k->num; j++)
@@ -236,6 +315,15 @@ void kanji_array_save (const gchar *filename, GArray *arr)
 						g_output_stream_write (G_OUTPUT_STREAM (out), k->word_reading[j], sizeof (gchar) * (strlen (k->word_reading[j]) + 1), NULL, NULL);
 						g_output_stream_write (G_OUTPUT_STREAM (out), k->word_meaning[j], sizeof (gchar) * (strlen (k->word_meaning[j]) + 1), NULL, NULL);
 				}
+
+				if (k->col != NULL)
+						for (j = 0; j < k->col->num; j++)
+						{
+								g_output_stream_write (G_OUTPUT_STREAM (out), k->col->writing[j], sizeof (gchar) * (strlen (k->col->writing[j]) + 1), NULL, NULL);
+								g_output_stream_write (G_OUTPUT_STREAM (out), k->col->reading[j], sizeof (gchar) * (strlen (k->col->reading[j]) + 1), NULL, NULL);
+								g_output_stream_write (G_OUTPUT_STREAM (out), k->col->meaning[j], sizeof (gchar) * (strlen (k->col->meaning[j]) + 1), NULL, NULL);
+								g_output_stream_write (G_OUTPUT_STREAM (out), &(k->col->level[j]), sizeof (guint8), NULL, NULL);
+						}
 
 				g_output_stream_write (G_OUTPUT_STREAM (out), k->kanji, sizeof (gchar) * (strlen (k->kanji) + 1), NULL, NULL);
 				g_output_stream_write (G_OUTPUT_STREAM (out), k->on, sizeof (gchar) * (strlen (k->on) + 1), NULL, NULL);
@@ -246,7 +334,7 @@ void kanji_array_save (const gchar *filename, GArray *arr)
 		}
 
 		g_output_stream_close (G_OUTPUT_STREAM (out), NULL, NULL);
-		 g_object_unref (G_OBJECT (out));
+		g_object_unref (G_OBJECT (out));
 }
 
 void kanji_array_free (GArray *arr)
@@ -271,4 +359,162 @@ void kanji_free (Kanji *k)
 		}
 
 		k->state = FALSE;
+}
+
+void kanji_index_save (const gchar *filename, GArray *arr)
+{
+		IndexEntry *tmp;
+
+		gint i;
+
+		GFile *f;
+		GFileOutputStream *out;
+		GError *error = NULL;
+
+		f = g_file_new_for_path (filename);
+
+		out = g_file_replace (f, NULL, FALSE, G_FILE_CREATE_NONE, NULL, &error);
+		if (error != NULL)
+				g_error ("Unable to write file: %s\n", error->message);
+
+		g_output_stream_write (G_OUTPUT_STREAM (out), &(arr->len), sizeof (int), NULL, NULL);
+
+		tmp = &g_array_index (arr, IndexEntry, i = 0);
+		while (i < arr->len)
+		{
+				g_output_stream_write (G_OUTPUT_STREAM (out), tmp->word, sizeof (gchar) * (strlen (tmp->word) + 1), NULL, NULL);
+				g_output_stream_write (G_OUTPUT_STREAM (out), &(tmp->ind), sizeof (gint), NULL, NULL);
+
+				tmp = &g_array_index (arr, IndexEntry, ++i);
+		}
+
+		g_output_stream_close (G_OUTPUT_STREAM (out), NULL, NULL);
+		g_object_unref (G_OBJECT (out));
+}
+
+GArray* kanji_index_load (const gchar *filename)
+{
+		GArray *index;
+		IndexEntry *tmp;
+
+		gchar *buf;
+		gsize size;
+		gint l, i;
+		guint pos;
+
+		GError *error = NULL;
+		GInputStream *in;
+
+		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
+		{
+				g_warning ("File %s does not exist", filename);
+				return NULL;
+		}
+
+		g_file_get_contents (filename, &buf, &size, &error);
+
+		if (error != NULL)
+		{
+				g_warning ("(kanji_index_load): Unable to read file %s", error->message);
+				return NULL;
+		}
+		
+		g_type_init ();
+
+		in = g_memory_input_stream_new_from_data (buf, size, NULL);
+
+		g_input_stream_read (in, &l, sizeof (int), NULL, NULL);
+
+		index = g_array_sized_new (TRUE, TRUE, sizeof (IndexEntry), l); 
+		index->len = l;
+
+		for (i = 0; i < l; i++)
+		{
+				tmp = &g_array_index (index, IndexEntry, i);
+
+				pos = g_seekable_tell (G_SEEKABLE (in));
+
+				tmp->word = g_strdup (buf + pos);
+				pos += strlen (buf + pos) + 1;
+				
+				g_seekable_seek (G_SEEKABLE (in), pos, G_SEEK_SET, NULL, NULL);
+				
+				g_input_stream_read (in, &(tmp->ind), sizeof (gint), NULL, NULL);
+		}
+
+		g_input_stream_close (in, NULL, NULL);
+		g_object_unref (G_OBJECT (in));
+
+		g_free (buf);
+
+		return index;
+}
+
+static gint compare (gconstpointer a, gconstpointer b)
+{
+		return g_utf8_collate (((IndexEntry*)a)->word, ((IndexEntry*)b)->word);
+}
+
+static void entry_append (GArray *index, gint ind, gchar *word)
+{
+		IndexEntry *entry;
+		entry = (IndexEntry*) g_malloc0 (sizeof (IndexEntry));
+		entry->ind = ind;
+		entry->word = word;
+		g_array_append_vals (index, entry, 1);
+}
+
+GArray* kanji_index_generate (GArray *arr)
+{
+		Kanji *k;
+
+		GArray *index = g_array_sized_new (TRUE, TRUE, sizeof (IndexEntry), 1000); 
+		gint i, j;
+
+		for (i = 0; i < arr->len; i++)
+		{
+				k = &g_array_index (arr, Kanji, i);
+				entry_append (index, i, k->kanji);
+				entry_append (index, i, k->on);
+				for (j = 0; j < k->num; j++)
+				{
+						entry_append (index, i, k->word_reading[j]);
+						entry_append (index, i, k->word_writing[j]);
+						entry_append (index, i, k->word_meaning[j]);
+				}
+				if (k->col == NULL)
+						continue;
+				for (j = 0; j < k->col->num; j++)
+				{
+						entry_append (index, i, k->col->reading[j]);
+						entry_append (index, i, k->col->writing[j]);
+						entry_append (index, i, k->col->meaning[j]);
+				}
+		}
+
+		g_array_sort (index, compare);
+
+		return index;
+}
+
+//too slow
+GArray* kanji_search (GArray *ind, const gchar *str)
+{
+		GArray *res = g_array_sized_new (TRUE, TRUE, sizeof (gint), 10);
+		gint i;
+		gboolean used[1000];
+
+		for (i = 0; i < 1000; i++)
+				used[i] = FALSE;
+
+		for (i = 0; i < ind->len; i++)
+		{
+				if (used[g_array_index (ind, IndexEntry, i).ind] == FALSE && g_strstr_len (g_array_index (ind, IndexEntry, i).word, -1, str) != NULL)
+				{
+						g_array_append_vals (res, &g_array_index (ind, IndexEntry, i).ind, 1);
+						used[g_array_index (ind, IndexEntry, i).ind] = TRUE;
+				}
+		}
+
+		return res;
 }
