@@ -531,8 +531,8 @@ int main (int argc, char *argv[])
 		guint16 i, j;
 		guint k;
 
-		const gchar filename1[] = "rindex";
-		const gchar filename2[] = "kindex";
+		const gchar filename1[] = "../dict/rindex";
+		const gchar filename2[] = "../dict/kindex";
 
 		GArray *radicals, *kanji, *dict, *ind;
 
@@ -550,13 +550,13 @@ int main (int argc, char *argv[])
 		kanji = kanji_decomposition_process (filename2);
 		g_message ("decompositions processed");
 
-		dict = kanji_array_load ("kanjidict");
+		dict = kanji_array_load ("../dict/kanjidict");
 		g_message ("dictionary loaded");
 
 		kanji_index_set (dict, kanji);
 		g_message ("generated index");
 
-		ind = kanji_index_load ("index");
+		ind = kanji_index_load ("../dict/index");
 		g_message ("word index loaded");
 
 		window = gtk_window_new (GTK_WINDOW_TOPLEVEL);

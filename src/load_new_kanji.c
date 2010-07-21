@@ -42,7 +42,7 @@ static void load_radicals ()
 		gint i, j;
 		gint strk;
 
-		f = fopen ("radicals", "r");
+		f = fopen ("../data/radicals", "r");
 
 		while (!feof (f))
 		{
@@ -74,7 +74,7 @@ static void kanjidic_parse (Kanji *tmp)
 		gunichar uc;
 		gint strk, len, grade, rnum, off;
 
-		f = fopen ("kanjidic", "r");
+		f = fopen ("../data/kanjidic", "r");
 
 		len = strlen (katakana);
 		while (!feof (f))
@@ -430,7 +430,7 @@ int main (int argc, char *argv[])
 
 		gtk_init (&argc, &argv);
 
-		arr = kanji_array_load ("kanjidict");
+		arr = kanji_array_load ("../dict/kanjidict");
 
 		vocab_process (arr);
 

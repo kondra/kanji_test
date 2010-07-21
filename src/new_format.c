@@ -383,17 +383,17 @@ int main (int argc, char *argv[])
 
 		gtk_init (&argc, &argv);
 
-		bytes1 = radicals_load (&contents1, "radkfile", error1);
+		bytes1 = radicals_load (&contents1, "../data/radkfile", error1);
 		g_message ("Radicals loaded");
 		radicals = radicals_process (contents1, bytes1);
 		g_message ("Radicals processed");
 
-		bytes2 = kanji_decomposition_load (&contents2, "kradfile", error2);
+		bytes2 = kanji_decomposition_load (&contents2, "../data/kradfile", error2);
 		g_message ("Decompositions loaded");
 		kanji = kanji_decomposition_process (contents2, bytes2);
 		g_message ("Decompositions processed");
 
-		strokes (kanji, "kanjidic");
+		strokes (kanji, "../data/kanjidic");
 		g_message ("Strokes information loaded");
 		new_format (radicals, kanji);
 
