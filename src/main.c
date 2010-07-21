@@ -18,11 +18,12 @@ int main (int argc, char *argv[])
 
 		arr = kanji_array_load ("kanjidict");
 		if (arr == NULL)
-				arr = kanji_array_create;
+				arr = g_array_sized_new (TRUE, TRUE, sizeof (Kanji), 100);
 
 		changed = kanji_list_view (arr);
 
 		if (changed)
 				kanji_array_save ("kanjidict", arr);
+
 		return 0;
 }
