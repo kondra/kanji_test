@@ -59,6 +59,8 @@ void kanji_article_view (Kanji *kanji)
 
 		gint i, j, f, k, off, prev = 0;
 		gint spacing = 10;
+		
+		Collocations *col = kanji->col;
 
 		if (buf == NULL)
 				buf = (gchar*) g_malloc0 (2000);
@@ -77,9 +79,11 @@ void kanji_article_view (Kanji *kanji)
 
 		gtk_text_buffer_create_tag (buffer, "kanji_font", "font", "46", NULL);
 		gtk_text_buffer_create_tag (buffer, "on_font", "font", "20", NULL);
-		gtk_text_buffer_create_tag (buffer, "on_color", "foreground", "#B86060", NULL);
+		gtk_text_buffer_create_tag (buffer, "on_color", "foreground", "#323BC1", NULL);
 		gtk_text_buffer_create_tag (buffer, "kun_color", "foreground", "#1E7681", NULL);
 		gtk_text_buffer_create_tag (buffer, "kun_font", "font", "12", NULL);
+		gtk_text_buffer_create_tag (buffer, "dec_font", "font", "bold 12", NULL);
+		gtk_text_buffer_create_tag (buffer, "dec_color", "foreground", "orange", NULL);
 		gtk_text_buffer_create_tag (buffer, "info_color", "foreground", "#6A6A6A", NULL);
 
 		gtk_text_buffer_get_start_iter (buffer, &start);
@@ -143,10 +147,44 @@ void kanji_article_view (Kanji *kanji)
 				gtk_text_buffer_insert (buffer, &start, "\n", -1);
 		}
 
+
+		if (col != NULL)
+		{
+				gtk_text_buffer_insert_with_tags_by_name (buffer, &start, "  Words:\n\n", -1, "dec_font", "dec_color", NULL);
+				for (i = 0; i < col->num; i++)
+				{
+						gtk_text_buffer_get_end_iter (buffer, &start);
+						g_sprintf (buf, " %s", col->writing[i]);
+						gtk_text_buffer_insert_with_tags_by_name (buffer, &start, buf, -1, "kun_font", NULL);
+
+						g_sprintf (buf, " [");
+						for (j = 0, off = 2, prev = 0; j < strlen (col->reading[i]); j++)
+						{
+								if (col->reading[i][j] == ';')
+								{
+										col->reading[i][j] = 0;
+										g_sprintf (buf + off, "%s] [", col->reading[i] + prev);
+										off += j - prev + 3;
+										prev = j + 1;
+										col->reading[i][j] = ';';
+								}
+						}
+
+						g_sprintf (buf + off, "%s]", col->reading[i] + prev);
+						
+						gtk_text_buffer_get_end_iter (buffer, &start);
+						gtk_text_buffer_insert_with_tags_by_name (buffer, &start, buf, -1, "kun_color", "kun_font", NULL);
+
+						g_sprintf (buf, " %s\n\n", col->meaning[i]);
+						gtk_text_buffer_insert (buffer, &start, buf, -1);
+						gtk_text_buffer_get_end_iter (buffer, &start);
+				}
+		}
+
 		scrolled = gtk_scrolled_window_new (NULL, NULL);
 		gtk_container_add (GTK_CONTAINER (scrolled), textview);
 
-		gtk_box_pack_start_defaults (GTK_BOX (GTK_DIALOG (dialog)->vbox), scrolled);
+		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), scrolled, TRUE, TRUE, 0);
 		
 		gtk_widget_show_all (dialog);
 		gtk_dialog_run (GTK_DIALOG (dialog));
