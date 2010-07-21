@@ -22,6 +22,7 @@ typedef struct
 typedef struct
 {
 		gchar *kanji;
+		gint index;
 		guint state;
 		
 		guint8 stroke;
@@ -36,14 +37,17 @@ typedef struct
 		GArray *kanji;
 		GArray *dict;
 		GArray *result;
+		GArray *ind;
 		GtkWidget *textview;
 		GtkTextBuffer *buffer;
 		GtkWidget *buttons[14][50];
 		GtkWidget *spin_min, *spin_max;
+		GtkWidget *search_entry;
 } Data;
 
 static void destroy (GtkWidget*, gpointer);
 static void radical_button_toggled (GtkWidget*, Data*);
+static void find_button_pressed (GtkWidget *button, Data *p);
 static void clear_button_pressed (GtkWidget*, Data*);
 static gboolean kanji_button_pressed (GtkWidget*, GdkEventButton*, Data*);
 static void stroke_range_changed (GtkWidget*, Data*);
@@ -136,13 +140,13 @@ static GArray* kanji_decomposition_process (const gchar *filename)
 				}
 				g_array_index (arr, KanjiDecomposition, i).kanji = g_strdup (buf);
 				g_array_index (arr, KanjiDecomposition, i).state = 1;
+				g_array_index (arr, KanjiDecomposition, i).index = -1;
 
 				g_input_stream_read (G_INPUT_STREAM (in), &(g_array_index (arr, KanjiDecomposition, i).stroke), sizeof (guint8), NULL, NULL);
 				g_input_stream_read (G_INPUT_STREAM (in), &(g_array_index (arr, KanjiDecomposition, i).num), sizeof (guint8), NULL, NULL);
 				
 				g_array_index (arr, KanjiDecomposition, i).radicals = (guint16*) g_malloc0 (sizeof (guint16) * g_array_index (arr, KanjiDecomposition, i).num);
-				g_input_stream_read (G_INPUT_STREAM (in), g_array_index (arr, KanjiDecomposition, i).radicals, 
-								sizeof (guint16) * g_array_index (arr, KanjiDecomposition, i).num, NULL, NULL);
+				g_input_stream_read (G_INPUT_STREAM (in), g_array_index (arr, KanjiDecomposition, i).radicals, sizeof (guint16) * g_array_index (arr, KanjiDecomposition, i).num, NULL, NULL);
 		}
 		
 		g_input_stream_close (G_INPUT_STREAM (in), NULL, NULL);
@@ -151,7 +155,18 @@ static GArray* kanji_decomposition_process (const gchar *filename)
 		return arr;
 }
 
-gint compare (gconstpointer a, gconstpointer b, gpointer k)
+static void kanji_index_set (GArray *dict, GArray *kanji)
+{
+		gint i, j;
+		for (j = 0; j < kanji->len; j++)
+		{
+				for (i = 0; i < dict->len; i++)
+						if (strcmp (g_array_index (kanji, KanjiDecomposition, j).kanji, g_array_index (dict, Kanji, i).kanji) == 0)
+								g_array_index (kanji, KanjiDecomposition, j).index = i;
+		}
+}
+
+static gint compare (gconstpointer a, gconstpointer b, gpointer k)
 {
 		register GArray *kanji = (GArray*) k;
 		if (g_array_index (kanji, KanjiDecomposition, *(guint16*)a).stroke < g_array_index (kanji, KanjiDecomposition, *(guint16*)b).stroke)
@@ -218,7 +233,9 @@ static void radical_button_toggled (GtkWidget *button, Data *p)
 				for (i = 0; i < len; i++)
 				{
 						l = g_array_index (result, guint16, i);
-						if (g_array_index (kanji, KanjiDecomposition, l).stroke > max || g_array_index (kanji, KanjiDecomposition, l).stroke < min)
+						if (g_array_index (kanji, KanjiDecomposition, l).stroke > max 
+										|| g_array_index (kanji, KanjiDecomposition, l).stroke < min 
+										|| g_array_index (kanji, KanjiDecomposition, l).index == -1)
 								continue;
 						g_sprintf (buf + off, "%s ", g_array_index (kanji, KanjiDecomposition, l).kanji);
 						off += strlen (g_array_index (kanji, KanjiDecomposition, l).kanji) + 1;
@@ -309,7 +326,9 @@ static void radical_button_toggled (GtkWidget *button, Data *p)
 				for (i = 0; i < len; i++)
 				{
 						l = g_array_index (result, guint16, i);
-						if (g_array_index (kanji, KanjiDecomposition, l).stroke > max || g_array_index (kanji, KanjiDecomposition, l).stroke < min)
+						if (g_array_index (kanji, KanjiDecomposition, l).stroke > max 
+										|| g_array_index (kanji, KanjiDecomposition, l).stroke < min
+										|| g_array_index (kanji, KanjiDecomposition, l).index == -1)
 								continue;
 						g_sprintf (buf + off, "%s ", g_array_index (kanji, KanjiDecomposition, l).kanji);
 						off += strlen (g_array_index (kanji, KanjiDecomposition, l).kanji) + 1;
@@ -352,6 +371,54 @@ static void clear_button_pressed (GtkWidget *button, Data *p)
 		gtk_text_buffer_delete (p->buffer, &start, &end);
 }
 
+static void find_button_pressed (GtkWidget *button, Data *p)
+{
+		GtkTextIter start, end;
+
+		gchar buf[5000];
+		guint off = 0;
+		gint i, cnt;
+		guint16 l;
+
+		const gchar *str = gtk_entry_get_text (GTK_ENTRY (p->search_entry));
+		GArray *res = kanji_search (p->ind, str);
+
+		gint min = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (p->spin_min));
+		gint max = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (p->spin_max));
+
+		clear_button_pressed (NULL, p);
+
+		for (i = 0; i < res->len; i++)
+				g_array_index (p->result, guint16, i) = (guint16) g_array_index (res, gint, i);
+
+		p->result->len = i;
+		g_array_sort_with_data (p->result, compare, (gpointer) p->kanji);
+		cnt = 0;
+		off = 0;
+		for (i = 0; i < p->result->len; i++)
+		{
+				l = g_array_index (p->result, guint16, i);
+				if (g_array_index (p->dict, Kanji, l).kanji_stroke > max || g_array_index (p->dict, Kanji, l).kanji_stroke < min)
+						continue;
+				g_sprintf (buf + off, "%s ", g_array_index (p->dict, Kanji, l).kanji);
+				off += strlen (g_array_index (p->dict, Kanji, l).kanji) + 1;
+				cnt++;
+				if (cnt >= 10)
+				{
+						buf[off++] = '\n';
+						cnt = 0;
+				}
+		}
+		buf[off] = 0;
+
+		gtk_text_buffer_get_start_iter (p->buffer, &start);
+		gtk_text_buffer_get_end_iter (p->buffer, &end);
+		gtk_text_buffer_delete (p->buffer, &start, &end);
+		gtk_text_buffer_insert_with_tags_by_name (p->buffer, &start, buf, -1, "kanji_font", NULL);
+
+		g_array_free (res, TRUE);
+}
+
 static void stroke_range_changed (GtkWidget *spin, Data *p)
 {
 		GtkTextIter start, end;
@@ -390,7 +457,9 @@ static void stroke_range_changed (GtkWidget *spin, Data *p)
 		for (i = 0; i < p->result->len; i++)
 		{
 				l = g_array_index (p->result, guint16, i);
-				if (g_array_index (p->kanji, KanjiDecomposition, l).stroke > max || g_array_index (p->kanji, KanjiDecomposition, l).stroke < min)
+				if (g_array_index (p->kanji, KanjiDecomposition, l).stroke > max 
+								|| g_array_index (p->kanji, KanjiDecomposition, l).stroke < min 
+								|| g_array_index (p->kanji, KanjiDecomposition, l).index == -1)
 						continue;
 				g_sprintf (buf + off, "%s ", g_array_index (p->kanji, KanjiDecomposition, l).kanji);
 				off += strlen (g_array_index (p->kanji, KanjiDecomposition, l).kanji) + 1;
@@ -465,7 +534,7 @@ int main (int argc, char *argv[])
 		const gchar filename1[] = "rindex";
 		const gchar filename2[] = "kindex";
 
-		GArray *radicals, *kanji, *dict;
+		GArray *radicals, *kanji, *dict, *ind;
 
 		Data p;
 
@@ -483,6 +552,12 @@ int main (int argc, char *argv[])
 
 		dict = kanji_array_load ("kanjidict");
 		g_message ("dictionary loaded");
+
+		kanji_index_set (dict, kanji);
+		g_message ("generated index");
+
+		ind = kanji_index_load ("index");
+		g_message ("word index loaded");
 
 		window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 		gtk_window_set_title (GTK_WINDOW (window), "Kanji");
@@ -506,6 +581,7 @@ int main (int argc, char *argv[])
 		p.cleared = FALSE;
 		p.radicals = radicals;
 		p.kanji = kanji;
+		p.ind = ind;
 		p.dict = dict;
 		p.buffer = buffer;
 		p.textview = textview;
@@ -545,13 +621,21 @@ int main (int argc, char *argv[])
 		GtkWidget* reset_button = gtk_button_new_from_stock (GTK_STOCK_CLEAR);
 		g_signal_connect (G_OBJECT (reset_button), "clicked", G_CALLBACK (clear_button_pressed), (gpointer) &p);
 
+		GtkWidget* find_button = gtk_button_new_from_stock (GTK_STOCK_FIND);
+		g_signal_connect (G_OBJECT (find_button), "clicked", G_CALLBACK (find_button_pressed), (gpointer) &p);
+
 		GtkWidget* label1 = gtk_label_new ("Stroke range:");
 		GtkWidget* label2 = gtk_label_new ("-");
+		GtkWidget* label3 = gtk_label_new ("Search:");
+		
 		p.spin_min = gtk_spin_button_new_with_range (1, 30, 1);
 		g_signal_connect (G_OBJECT (p.spin_min), "value-changed", G_CALLBACK (stroke_range_changed), (gpointer) &p);
+		
 		p.spin_max = gtk_spin_button_new_with_range (1, 30, 1);
 		gtk_spin_button_set_value (GTK_SPIN_BUTTON (p.spin_max), 30);
 		g_signal_connect (G_OBJECT (p.spin_max), "value-changed", G_CALLBACK (stroke_range_changed), (gpointer) &p);
+
+		p.search_entry = gtk_entry_new ();
 
 		hbox1 = gtk_hbox_new (FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox1), reset_button, FALSE, FALSE, 5);
@@ -559,6 +643,9 @@ int main (int argc, char *argv[])
 		gtk_box_pack_start (GTK_BOX (hbox1), p.spin_min, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox1), label2, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox1), p.spin_max, FALSE, FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (hbox1), label3, FALSE, FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (hbox1), p.search_entry, FALSE, FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (hbox1), find_button, FALSE, FALSE, 5);
 
 		hbox2 = gtk_hbox_new (FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox2), scrolled_table, TRUE, TRUE, 5);
