@@ -196,7 +196,8 @@ static void row_add (GtkButton *button, Data *p)
 		if (tmp == NULL)
 				return;
 
-		p->arr = kanji_array_append (p->arr, tmp);
+		//p->arr = kanji_array_append (p->arr, tmp);
+		p->arr = g_array_append_vals (p->arr, tmp, 1);
 
 		GtkWidget *treeview = p->tview;
 		GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (treeview));
