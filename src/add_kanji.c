@@ -2,6 +2,7 @@
 
 #include "kanji.h"
 #include "add_kanji.h"
+#include "collocations_edit.h"
 
 typedef struct
 {
@@ -14,7 +15,8 @@ typedef struct
 		GtkWidget *grade_spin;
 		GtkWidget *stroke_spin;
 		GtkWidget *rst_spin;
-} Widgets;
+		Collocations *col;
+} Data;
 
 enum
 {
@@ -24,18 +26,19 @@ enum
 		COLUMNS
 };
 
-const gchar *column_names[] = {"Writing", "Reading", "Meaning"};
+static const gchar *column_names[] = {"Writing", "Reading", "Meaning"};
 
-static void input_check (GtkWidget*, Widgets*);
+static void input_check (GtkWidget*, Data*);
 static void setup_tree_view (GtkTreeView*);
 static void cell_edited (GtkCellRendererText*, gchar*, gchar*, GtkTreeView*);
 static void row_add (GtkMenuItem*, GtkTreeView*);
 static void row_remove (GtkMenuItem*, GtkTreeView*);
+static void edit_button_clicked (GtkWidget*, Data*);
 
 static Kanji* create_dialog (Kanji*, gboolean);
 
-static void setup_data (Kanji*, GtkListStore*, Widgets*);
-static Kanji* get_data (GtkTreeView*, Widgets*);
+static void setup_data (Kanji*, GtkListStore*, Data*);
+static Kanji* get_data (GtkTreeView*, Data*);
 
 Kanji* kanji_add_dialog (void)
 {
@@ -73,7 +76,7 @@ static void row_remove (GtkMenuItem *item, GtkTreeView *treeview)
 		gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
 }
 
-static void input_check (GtkWidget *cw, Widgets *w)
+static void input_check (GtkWidget *cw, Data *w)
 {
 		guint16 l1 = gtk_entry_get_text_length (GTK_ENTRY (w->kanji_entry));
 		guint16 l2 = gtk_entry_get_text_length (GTK_ENTRY (w->radical_entry));
@@ -88,7 +91,7 @@ static void input_check (GtkWidget *cw, Widgets *w)
 				gtk_dialog_set_response_sensitive (GTK_DIALOG (w->dialog), GTK_RESPONSE_OK, FALSE);
 }
 
-static Kanji* get_data (GtkTreeView *treeview, Widgets *w)
+static Kanji* get_data (GtkTreeView *treeview, Data *w)
 {
 		GtkTreeIter iter;
 
@@ -124,6 +127,7 @@ static Kanji* get_data (GtkTreeView *treeview, Widgets *w)
 		}
 
 		Kanji *tmp = kanji_create (kanji_str, radical_str, on_str, NULL, jlpt_lvl, grade, stroke_cnt, rst_cnt, num, writing, reading, meaning);
+		tmp->col = w->col;
 
 		g_free (writing);
 		g_free (reading);
@@ -132,7 +136,7 @@ static Kanji* get_data (GtkTreeView *treeview, Widgets *w)
 		return tmp;
 }
 
-static void setup_data (Kanji *old, GtkListStore *store, Widgets *w)
+static void setup_data (Kanji *old, GtkListStore *store, Data *w)
 {
 		GtkTreeIter iter;
 		gint i;
@@ -157,6 +161,8 @@ static void setup_data (Kanji *old, GtkListStore *store, Widgets *w)
 								WORD_READING, old->word_reading[i], 
 								WORD_MEANING, old->word_meaning[i], -1);
 		}
+
+		w->col = old->col;
 }
 
 static void setup_tree_view (GtkTreeView *treeview)
@@ -196,6 +202,11 @@ static void cell_edited (GtkCellRendererText *renderer, gchar *path, gchar *new_
 				gtk_list_store_set (GTK_LIST_STORE (model), &iter, num, new_text, -1);
 }
 
+static void edit_button_clicked (GtkWidget *button, Data *w)
+{
+		w->col = collocations_edit_dialog (w->col);
+}
+
 static Kanji* create_dialog (Kanji *old, gboolean mod)
 {
 		GtkWidget *hbox_required, *hbox_additional;
@@ -209,7 +220,7 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 		GtkListStore *store;
 		gint result;
 
-		Widgets w;
+		Data w;
 
 		if (mod == FALSE)
 				w.dialog = gtk_dialog_new_with_buttons ("Add New Kanji", NULL, GTK_DIALOG_MODAL, 
@@ -257,8 +268,9 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 
 		store = gtk_list_store_new (COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 
+		w.col = NULL;
 		gtk_dialog_set_response_sensitive (GTK_DIALOG (w.dialog), GTK_RESPONSE_OK, FALSE);
-		if (mod == TRUE)
+		if (mod)
 		{
 				setup_data (old, store, &w);
 				input_check (NULL, &w);
@@ -270,14 +282,19 @@ static Kanji* create_dialog (Kanji *old, gboolean mod)
 
 		GtkWidget* add_button = gtk_button_new_from_stock (GTK_STOCK_ADD);
 		GtkWidget* remove_button = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
+		GtkWidget* edit_button = gtk_button_new_with_mnemonic ("_Edit Collocations");
+
+		gtk_button_set_image (GTK_BUTTON (edit_button), gtk_image_new_from_stock(GTK_STOCK_EDIT, GTK_ICON_SIZE_BUTTON));
 
 		g_signal_connect (G_OBJECT (add_button), "clicked", G_CALLBACK (row_add), (gpointer) treeview);
 		g_signal_connect (G_OBJECT (remove_button), "clicked", G_CALLBACK (row_remove), (gpointer) treeview);
+		g_signal_connect (G_OBJECT (edit_button), "clicked", G_CALLBACK (edit_button_clicked), (gpointer)&w);
 
 		hbox = gtk_hbox_new (FALSE, 5);
 
 		gtk_box_pack_start (GTK_BOX (hbox), add_button, FALSE, FALSE, 5);
 		gtk_box_pack_start (GTK_BOX (hbox), remove_button, FALSE, FALSE, 5);
+		gtk_box_pack_start (GTK_BOX (hbox), edit_button, FALSE, FALSE, 5);
 
 		scrolled_win = gtk_scrolled_window_new (NULL, NULL);
 		gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
